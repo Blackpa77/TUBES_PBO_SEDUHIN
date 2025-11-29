@@ -1,0 +1,10 @@
+{
+    "name": "kelompok/tubes-pbo",
+    "description": "Tubes PBO Seduhin",
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "require": {}
+}
