@@ -3,27 +3,33 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Order;
-use App\Core\Models;
 use PDO;
+use DateTime;
 
 class OrderRepository
 {
     private PDO $db;
-    public function __construct() { $this->db = Database::getInstance()->getConnection(); }
+
+    public function __construct() 
+    { 
+        $this->db = Database::getInstance()->getConnection(); 
+    }
 
     public function save(Order $order): bool
     {
+        // --- FIX: Set waktu sekarang agar tidak null di JSON response ---
+        $order->setCreatedAt(new DateTime());
+        // ----------------------------------------------------------------
+
         // 1. Simpan Header Order
-        // Pastikan model Order.php kamu nanti disesuaikan dengan kolom 'nama_pelanggan', 'total_harga'
         $sql = "INSERT INTO orders (nama_pelanggan, total_harga, status, created_at) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         
-        // Asumsi di Order Model propertinya sudah disesuaikan (lihat langkah selanjutnya jika perlu)
         $res = $stmt->execute([
-            $order->namaPelanggan ?? 'Guest', // Handle nama
+            $order->namaPelanggan ?? 'Guest',
             $order->total, 
             $order->status, 
-            $order->getCreatedAt()
+            $order->getCreatedAt() // Mengambil waktu yang baru saja di-set
         ]);
 
         if ($res) {
@@ -35,10 +41,10 @@ class OrderRepository
                 $stmtItem = $this->db->prepare("INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)");
                 
                 foreach ($order->items as $itm) {
-                    $subtotal = $itm->qty * $itm->price; // Hitung subtotal
+                    $subtotal = $itm->qty * $itm->price;
                     $stmtItem->execute([
                         $orderId, 
-                        $itm->menuId, // Ini ID Produk
+                        $itm->menuId, 
                         $itm->qty, 
                         $itm->price,
                         $subtotal
@@ -56,16 +62,21 @@ class OrderRepository
         $r = $stmt->fetch();
         if (!$r) return null;
 
-        // Mapping balik dari DB ke Model Order
-        // Note: Kamu mungkin perlu update Model Order.php juga agar propertinya cocok
+        // Mapping dari Database ke Model
         $orderData = [
-            'customer_name' => $r['nama_pelanggan'], // Mapping manual
+            'customer_name' => $r['nama_pelanggan'],
             'total' => $r['total_harga'],
             'status' => $r['status']
         ];
         
         $order = new Order($orderData);
         $order->setId((int)$r['id']);
+        
+        // --- FIX: Ambil tanggal dari DB saat GET data ---
+        if (!empty($r['created_at'])) {
+            $order->setCreatedAt(new DateTime($r['created_at']));
+        }
+        // ------------------------------------------------
         
         return $order;
     }
