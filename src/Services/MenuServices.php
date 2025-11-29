@@ -2,8 +2,6 @@
 namespace App\Services;
 
 use App\Repositories\MenuRepository;
-use App\Models\Menu;
-use App\Exceptions\NotFoundException;
 use App\Exceptions\ValidationException;
 
 class MenuService
@@ -11,40 +9,42 @@ class MenuService
     private MenuRepository $repo;
     public function __construct(MenuRepository $r) { $this->repo = $r; }
 
-    public function list(array $filters = []): array { return array_map(fn($m)=>$m->toArray(), $this->repo->findAll($filters)); }
+    public function list(array $filters = []): array {
+        $limit = isset($filters['limit']) ? (int)$filters['limit'] : 50;
+        $offset = isset($filters['offset']) ? (int)$filters['offset'] : 0;
+        $items = $this->repo->all($filters, $limit, $offset);
+        return array_map(fn($m)=>$m->toArray(), $items);
+    }
 
-    public function get(int $id): array
-    {
-        $m = $this->repo->findById($id);
-        if (!$m) throw new NotFoundException("Menu not found");
+    public function get(int $id): array {
+        $m = $this->repo->find($id);
         return $m->toArray();
     }
 
-    public function create(array $data): array
-    {
-        $menu = new Menu($data);
-        if (!$menu->validate()) throw new ValidationException("Validation failed", $menu->getErrors());
-        $this->repo->save($menu);
+    private function validate(array $data, bool $forUpdate=false): void {
+        $errors = [];
+        if (!$forUpdate || isset($data['name'])) {
+            if (empty($data['name'])) $errors['name'] = 'Name is required';
+        }
+        if (!$forUpdate || isset($data['price'])) {
+            if (!isset($data['price']) || !is_numeric($data['price'])) $errors['price'] = 'Price must be numeric';
+        }
+        if ($errors) throw new ValidationException($errors);
+    }
+
+    public function create(array $data): array {
+        $this->validate($data);
+        $menu = $this->repo->create($data);
         return $menu->toArray();
     }
 
-    public function update(int $id, array $data): array
-    {
-        $existing = $this->repo->findById($id);
-        if (!$existing) throw new NotFoundException("Menu not found");
-        // merge fields
-        $merged = array_merge($existing->toArray(), $data);
-        $menu = new Menu($merged);
-        $menu->setId($id);
-        if (!$menu->validate()) throw new ValidationException("Validation failed", $menu->getErrors());
-        $this->repo->save($menu);
+    public function update(int $id, array $data): array {
+        $this->validate($data, true);
+        $menu = $this->repo->update($id, $data);
         return $menu->toArray();
     }
 
-    public function delete(int $id): bool
-    {
-        $deleted = $this->repo->delete($id);
-        if (!$deleted) throw new NotFoundException("Menu not found");
-        return true;
+    public function delete(int $id): void {
+        $this->repo->delete($id);
     }
 }

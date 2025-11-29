@@ -7,45 +7,42 @@ use App\Builders\ApiResponseBuilder;
 
 class MenuController extends Controller
 {
-    private MenuService $service;
-    public function __construct(MenuService $s) { $this->service = $s; }
+    public function __construct(private MenuService $service) {}
 
     public function index(): void
     {
-        $filters = $_GET;
-        $data = $this->service->list($filters);
+        $data = $this->service->list($_GET);
         $this->send($data);
     }
 
     public function show(int $id): void
     {
         try {
-            $data = $this->service->get($id);
-            $this->send($data);
+            $this->send($this->service->get($id));
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 404)->send();
+            ApiResponseBuilder::error($e->getMessage(), 404)->send();
         }
     }
 
     public function store(): void
     {
-        $payload = $this->getJson();
         try {
+            $payload = $this->getJson();
             $menu = $this->service->create($payload);
             ApiResponseBuilder::created($menu, 'Menu created')->send();
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400, $e instanceof \App\Exceptions\ValidationException ? $e->getErrors() : [])->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
     public function update(int $id): void
     {
-        $data = $this->getJson();
         try {
-            $menu = $this->service->update($id, $data);
+            $payload = $this->getJson();
+            $menu = $this->service->update($id, $payload);
             $this->send($menu);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
@@ -55,7 +52,7 @@ class MenuController extends Controller
             $this->service->delete($id);
             $this->send(['deleted' => true]);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 }
