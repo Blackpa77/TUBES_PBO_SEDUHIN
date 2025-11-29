@@ -7,15 +7,10 @@ use PDO;
 
 class MenuRepository
 {
-<<<<<<< HEAD
     private \PDO $db;
     public function __construct() {
         $this->db = Database::getInstance();
     }
-=======
-    private PDO $db;
-    public function __construct() { $this->db = Database::getInstance()->getConnection(); }
->>>>>>> b54210bbf0ed62d3d12e04fa357e61d26cf6f1bf
 
     public function findById(int $id): ?Menu
     {
