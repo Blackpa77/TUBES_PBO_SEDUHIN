@@ -18,12 +18,20 @@ class OrderService
         $this->menuRepo = $mr;
     }
 
+    // --- METHOD BARU: List Semua Order ---
+    public function list(): array
+    {
+        $orders = $this->orderRepo->findAll();
+        // Ubah objek menjadi array JSON-ready
+        return array_map(fn($order) => $order->toArray(), $orders);
+    }
+
     public function createOrder(array $payload): array
     {
         $order = new Order($payload);
 
         if (!$order->validate()) {
-            throw new ValidationException('Invalid order', $order->getErrors());
+            throw new ValidationException('Invalid order', $order->items);
         }
 
         $total = 0;
@@ -34,7 +42,7 @@ class OrderService
 
             if (!$menu) throw new BusinessException("Menu id {$it['menu_id']} not found");
             if ($menu->getStock() < (int)$it['qty']) 
-                throw new BusinessException("Not enough stock for {$menu->getName()}");
+                throw new BusinessException("Not enough stock for {$menu->toArray()['nama_produk']}");
 
             $menu->reduceStock((int)$it['qty']);
             $this->menuRepo->save($menu);

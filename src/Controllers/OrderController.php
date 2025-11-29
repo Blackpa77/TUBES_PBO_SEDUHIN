@@ -10,6 +10,17 @@ class OrderController extends Controller
     private OrderService $service;
     public function __construct(OrderService $s) { $this->service = $s; }
 
+    // --- METHOD BARU: Endpoint GET /orders ---
+    public function index(): void
+    {
+        try {
+            $data = $this->service->list();
+            $this->send($data);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 500)->send();
+        }
+    }
+
     public function store(): void
     {
         $payload = $this->getJson();

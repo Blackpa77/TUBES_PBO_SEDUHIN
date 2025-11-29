@@ -17,9 +17,8 @@ class OrderRepository
 
     public function save(Order $order): bool
     {
-        // --- FIX: Set waktu sekarang agar tidak null di JSON response ---
+        // Set waktu sekarang agar tidak null di JSON
         $order->setCreatedAt(new DateTime());
-        // ----------------------------------------------------------------
 
         // 1. Simpan Header Order
         $sql = "INSERT INTO orders (nama_pelanggan, total_harga, status, created_at) VALUES (?, ?, ?, ?)";
@@ -29,7 +28,7 @@ class OrderRepository
             $order->namaPelanggan ?? 'Guest',
             $order->total, 
             $order->status, 
-            $order->getCreatedAt() // Mengambil waktu yang baru saja di-set
+            $order->getCreatedAt()
         ]);
 
         if ($res) {
@@ -62,7 +61,6 @@ class OrderRepository
         $r = $stmt->fetch();
         if (!$r) return null;
 
-        // Mapping dari Database ke Model
         $orderData = [
             'customer_name' => $r['nama_pelanggan'],
             'total' => $r['total_harga'],
@@ -72,12 +70,36 @@ class OrderRepository
         $order = new Order($orderData);
         $order->setId((int)$r['id']);
         
-        // --- FIX: Ambil tanggal dari DB saat GET data ---
         if (!empty($r['created_at'])) {
             $order->setCreatedAt(new DateTime($r['created_at']));
         }
-        // ------------------------------------------------
         
         return $order;
+    }
+
+    // --- METHOD BARU: Ambil Semua Order ---
+    public function findAll(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
+        $results = [];
+        
+        while ($r = $stmt->fetch()) {
+            $orderData = [
+                'customer_name' => $r['nama_pelanggan'],
+                'total' => $r['total_harga'],
+                'status' => $r['status']
+            ];
+            
+            $order = new Order($orderData);
+            $order->setId((int)$r['id']);
+            
+            if (!empty($r['created_at'])) {
+                $order->setCreatedAt(new DateTime($r['created_at']));
+            }
+            
+            $results[] = $order;
+        }
+        
+        return $results;
     }
 }

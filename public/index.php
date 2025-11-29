@@ -1,7 +1,6 @@
 <?php
-// --- SET TIMEZONE KE WIB (Asia/Jakarta) ---
+// Set Timezone
 date_default_timezone_set('Asia/Jakarta');
-// ------------------------------------------
 
 require_once __DIR__ . '/../vendor/autoload.php';
 
@@ -47,5 +46,8 @@ $router->delete('/menus/:id', [$menuController, 'destroy']);
 
 $router->post('/orders', [$orderController, 'store']);
 $router->get('/orders/:id', [$orderController, 'show']);
+
+// --- RUTE BARU: GET ALL ORDERS ---
+$router->get('/orders', [$orderController, 'index']);
 
 $router->dispatch();
