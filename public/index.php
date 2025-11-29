@@ -1,5 +1,4 @@
 <?php
-// Set Timezone
 date_default_timezone_set('Asia/Jakarta');
 
 require_once __DIR__ . '/../vendor/autoload.php';
@@ -12,7 +11,6 @@ use App\Services\OrderService;
 use App\Controllers\MenuController;
 use App\Controllers\OrderController;
 
-// Basic error handler
 error_reporting(E_ALL);
 set_exception_handler(function($e){
     http_response_code($e->getCode() ?: 500);
@@ -27,7 +25,6 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
-// DI container (manual)
 $menuRepo = new MenuRepository();
 $orderRepo = new OrderRepository();
 $menuService = new MenuService($menuRepo);
@@ -36,18 +33,20 @@ $orderService = new OrderService($orderRepo, $menuRepo);
 $menuController = new MenuController($menuService);
 $orderController = new OrderController($orderService);
 
-// Router
 $router = new Router();
+
+// Routes Menu
 $router->get('/menus', [$menuController, 'index']);
 $router->get('/menus/:id', [$menuController, 'show']);
 $router->post('/menus', [$menuController, 'store']);
 $router->put('/menus/:id', [$menuController, 'update']);
 $router->delete('/menus/:id', [$menuController, 'destroy']);
 
-$router->post('/orders', [$orderController, 'store']);
-$router->get('/orders/:id', [$orderController, 'show']);
-
-// --- RUTE BARU: GET ALL ORDERS ---
-$router->get('/orders', [$orderController, 'index']);
+// Routes Order
+$router->get('/orders', [$orderController, 'index']);       // Get All
+$router->get('/orders/:id', [$orderController, 'show']);   // Get One
+$router->post('/orders', [$orderController, 'store']);     // Create
+$router->put('/orders/:id', [$orderController, 'update']); // Update (Status/Nama)
+$router->delete('/orders/:id', [$orderController, 'destroy']); // Delete
 
 $router->dispatch();

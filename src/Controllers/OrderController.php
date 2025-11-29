@@ -10,7 +10,6 @@ class OrderController extends Controller
     private OrderService $service;
     public function __construct(OrderService $s) { $this->service = $s; }
 
-    // --- METHOD BARU: Endpoint GET /orders ---
     public function index(): void
     {
         try {
@@ -23,8 +22,8 @@ class OrderController extends Controller
 
     public function store(): void
     {
-        $payload = $this->getJson();
         try {
+            $payload = $this->getJson();
             $order = $this->service->createOrder($payload);
             ApiResponseBuilder::created($order, 'Order placed')->send();
         } catch (\Exception $e) {
@@ -39,6 +38,29 @@ class OrderController extends Controller
             $this->send($o);
         } catch (\Exception $e) {
             ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 404)->send();
+        }
+    }
+
+    // --- METHOD BARU: UPDATE ---
+    public function update(int $id): void
+    {
+        try {
+            $payload = $this->getJson();
+            $order = $this->service->updateOrder($id, $payload);
+            $this->send($order, 200);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+        }
+    }
+
+    // --- METHOD BARU: DESTROY ---
+    public function destroy(int $id): void
+    {
+        try {
+            $this->service->deleteOrder($id);
+            $this->send(['message' => 'Order deleted successfully']);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
         }
     }
 }

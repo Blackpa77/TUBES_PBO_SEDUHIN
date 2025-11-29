@@ -15,15 +15,30 @@ class OrderRepository
         $this->db = Database::getInstance()->getConnection(); 
     }
 
+    public function findAll(): array
+    {
+        $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
+        $results = [];
+        while ($r = $stmt->fetch()) {
+            $results[] = $this->hydrate($r);
+        }
+        return $results;
+    }
+
+    public function findById(int $id): ?Order
+    {
+        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
+        $stmt->execute([$id]);
+        $r = $stmt->fetch();
+        return $r ? $this->hydrate($r) : null;
+    }
+
     public function save(Order $order): bool
     {
-        // Set waktu sekarang agar tidak null di JSON
         $order->setCreatedAt(new DateTime());
-
-        // 1. Simpan Header Order
+        
         $sql = "INSERT INTO orders (nama_pelanggan, total_harga, status, created_at) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
-        
         $res = $stmt->execute([
             $order->namaPelanggan ?? 'Guest',
             $order->total, 
@@ -34,72 +49,60 @@ class OrderRepository
         if ($res) {
             $orderId = $this->db->lastInsertId();
             $order->setId((int)$orderId);
-
-            // 2. Simpan Detail Item ke order_items
-            if (!empty($order->items)) {
-                $stmtItem = $this->db->prepare("INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)");
-                
-                foreach ($order->items as $itm) {
-                    $subtotal = $itm->qty * $itm->price;
-                    $stmtItem->execute([
-                        $orderId, 
-                        $itm->menuId, 
-                        $itm->qty, 
-                        $itm->price,
-                        $subtotal
-                    ]);
-                }
-            }
+            $this->saveItems($order);
         }
         return $res;
     }
 
-    public function findById(int $id): ?Order
+    // --- METHOD BARU: UPDATE ---
+    public function update(Order $order): bool
     {
-        $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
-        $stmt->execute([$id]);
-        $r = $stmt->fetch();
-        if (!$r) return null;
-
-        $orderData = [
-            'customer_name' => $r['nama_pelanggan'],
-            'total' => $r['total_harga'],
-            'status' => $r['status']
-        ];
+        $order->setUpdatedAt(new DateTime());
         
-        $order = new Order($orderData);
-        $order->setId((int)$r['id']);
+        $sql = "UPDATE orders SET nama_pelanggan = ?, status = ?, updated_at = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
         
-        if (!empty($r['created_at'])) {
-            $order->setCreatedAt(new DateTime($r['created_at']));
-        }
-        
-        return $order;
+        // Kita hanya update info header (Status & Nama)
+        return $stmt->execute([
+            $order->namaPelanggan,
+            $order->status,
+            $order->getUpdatedAt(),
+            $order->getId()
+        ]);
     }
 
-    // --- METHOD BARU: Ambil Semua Order ---
-    public function findAll(): array
+    // --- METHOD BARU: DELETE ---
+    public function delete(int $id): bool
     {
-        $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
-        $results = [];
-        
-        while ($r = $stmt->fetch()) {
-            $orderData = [
-                'customer_name' => $r['nama_pelanggan'],
-                'total' => $r['total_harga'],
-                'status' => $r['status']
-            ];
-            
-            $order = new Order($orderData);
-            $order->setId((int)$r['id']);
-            
-            if (!empty($r['created_at'])) {
-                $order->setCreatedAt(new DateTime($r['created_at']));
+        $stmt = $this->db->prepare("DELETE FROM orders WHERE id = ?");
+        return $stmt->execute([$id]);
+    }
+
+    // Helper untuk menyimpan item
+    private function saveItems(Order $order): void
+    {
+        if (!empty($order->items)) {
+            $stmt = $this->db->prepare("INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)");
+            foreach ($order->items as $itm) {
+                $subtotal = $itm->qty * $itm->price;
+                $stmt->execute([$order->getId(), $itm->menuId, $itm->qty, $itm->price, $subtotal]);
             }
-            
-            $results[] = $order;
         }
+    }
+
+    // Helper untuk mapping DB ke Object
+    private function hydrate(array $row): Order
+    {
+        $order = new Order([
+            'customer_name' => $row['nama_pelanggan'],
+            'total' => $row['total_harga'],
+            'status' => $row['status']
+        ]);
+        $order->setId((int)$row['id']);
         
-        return $results;
+        if (!empty($row['created_at'])) $order->setCreatedAt(new DateTime($row['created_at']));
+        if (!empty($row['updated_at'])) $order->setUpdatedAt(new DateTime($row['updated_at']));
+        
+        return $order;
     }
 }
