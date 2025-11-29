@@ -3,6 +3,10 @@ namespace App\Traits;
 
 use DateTime;
 
+/**
+ * Trait untuk menambahkan timestamp otomatis
+ * Traits memungkinkan reuse kode tanpa inheritance
+ */
 trait Timestampable
 {
     protected ?DateTime $createdAt = null;
