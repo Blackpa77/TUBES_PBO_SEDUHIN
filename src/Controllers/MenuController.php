@@ -4,61 +4,55 @@ namespace App\Controllers;
 use App\Core\Controller;
 use App\Services\MenuService;
 use App\Builders\ApiResponseBuilder;
-use App\Exceptions\ValidationException;
 
 class MenuController extends Controller
 {
-    private MenuService $service;
-    public function __construct(MenuService $s) { $this->service = $s; }
+    public function __construct(private MenuService $service) {}
 
     public function index(): void
     {
-        $filters = $_GET ?? [];
-        $data = $this->service->list($filters);
+        $data = $this->service->list($_GET);
         $this->send($data);
     }
 
-    public function show($id): void
+    public function show(int $id): void
     {
         try {
-            $data = $this->service->get((int)$id);
-            $this->send($data);
+            $this->send($this->service->get($id));
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 404)->send();
+            ApiResponseBuilder::error($e->getMessage(), 404)->send();
         }
     }
 
     public function store(): void
     {
-        $payload = $this->getJson();
         try {
+            $payload = $this->getJson();
             $menu = $this->service->create($payload);
             ApiResponseBuilder::created($menu, 'Menu created')->send();
-        } catch (ValidationException $ve) {
-            ApiResponseBuilder::error($ve->getMessage(), $ve->getCode() ?: 422, $ve->getErrors())->send();
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
-    public function update($id): void
+    public function update(int $id): void
     {
-        $data = $this->getJson();
         try {
-            $menu = $this->service->update((int)$id, $data);
+            $payload = $this->getJson();
+            $menu = $this->service->update($id, $payload);
             $this->send($menu);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
-    public function destroy($id): void
+    public function destroy(int $id): void
     {
         try {
-            $this->service->delete((int)$id);
+            $this->service->delete($id);
             $this->send(['deleted' => true]);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 }
