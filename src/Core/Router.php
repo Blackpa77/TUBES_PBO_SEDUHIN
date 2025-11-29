@@ -17,8 +17,8 @@ class Router
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        // --- FITUR CERDAS: Hapus '/public' otomatis ---
-        // Ini mengatasi masalah "Not Found" jika diakses via http://tubes_pbo.test/public/menus
+        // --- UPDATE PINTAR: Hapus '/public' otomatis ---
+        // Ini mengatasi masalah "Not Found" di Laragon
         if (strpos($uri, '/public') === 0) {
             $uri = substr($uri, 7);
         }
@@ -37,7 +37,6 @@ class Router
             }
         }
 
-        // Jika route tidak ditemukan
         http_response_code(404);
         echo json_encode(['success'=>false, 'message'=>'Not found', 'debug_uri'=>$uri]);
     }
