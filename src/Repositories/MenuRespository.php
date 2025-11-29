@@ -9,7 +9,9 @@ use App\Exceptions\NotFoundException;
 class MenuRepository
 {
     private \PDO $db;
-    public function __construct() { $this->db = Database::getInstance(); }
+    public function __construct() {
+        $this->db = Database::getInstance();
+    }
 
     public function all(array $filters = [], int $limit = 100, int $offset = 0): array {
         $sql = "SELECT * FROM menus WHERE 1=1";

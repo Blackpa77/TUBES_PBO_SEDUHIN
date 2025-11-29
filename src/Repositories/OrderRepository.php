@@ -3,6 +3,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Order;
+use App\Core\Models;
 use PDO;
 
 class OrderRepository
