@@ -17,10 +17,10 @@ class Router
         $method = $_SERVER['REQUEST_METHOD'];
         $uri = parse_url($_SERVER['REQUEST_URI'], PHP_URL_PATH);
 
-        // --- UPDATE PINTAR: Hapus '/public' otomatis ---
-        // Ini bikin aplikasimu jalan di folder manapun (public atau root)
+        // --- FITUR CERDAS: Hapus '/public' otomatis ---
+        // Ini mengatasi masalah "Not Found" jika diakses via http://tubes_pbo.test/public/menus
         if (strpos($uri, '/public') === 0) {
-            $uri = substr($uri, 7); // Hapus 7 huruf "/public"
+            $uri = substr($uri, 7);
         }
         // ----------------------------------------------
 
@@ -37,7 +37,14 @@ class Router
             }
         }
 
-        // Jika sampai sini, berarti route benar-benar tidak ada
+        // Jika route tidak ditemukan
         http_response_code(404);
         echo json_encode(['success'=>false, 'message'=>'Not found', 'debug_uri'=>$uri]);
     }
+
+    private function toRegex(string $p): string
+    {
+        $pattern = preg_replace('#/:([a-zA-Z_][a-zA-Z0-9_-]*)#', '/([0-9a-zA-Z_-]+)', $p);
+        return '#^' . $pattern . '$#';
+    }
+}
