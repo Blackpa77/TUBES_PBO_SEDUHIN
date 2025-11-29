@@ -1,4 +1,8 @@
 <?php
+// --- SET TIMEZONE KE WIB (Asia/Jakarta) ---
+date_default_timezone_set('Asia/Jakarta');
+// ------------------------------------------
+
 require_once __DIR__ . '/../vendor/autoload.php';
 
 use App\Core\Router;
