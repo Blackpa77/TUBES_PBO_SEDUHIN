@@ -5,31 +5,59 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kasir Seduhin (Backend Connected)</title>
     <style>
-        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f4f4f9; }
-        .container { max-width: 1000px; margin: 0 auto; display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
-        h1 { color: #333; grid-column: 1 / -1; }
+        body { font-family: 'Segoe UI', sans-serif; margin: 0; padding: 20px; background: #f4f4f9; color: #333; }
+        .container { max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 3fr 1fr; gap: 20px; }
+        h1 { grid-column: 1 / -1; display: flex; align-items: center; gap: 10px; margin-bottom: 20px; }
         
-        /* Kartu Menu */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 15px; }
-        .card { background: white; padding: 15px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); transition: transform 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card h3 { margin: 0 0 10px 0; color: #2c3e50; }
-        .price { color: #e67e22; font-weight: bold; font-size: 1.1em; }
-        .stock { font-size: 0.9em; color: #7f8c8d; }
-        .btn-add { width: 100%; background: #3498db; color: white; border: none; padding: 10px; margin-top: 10px; border-radius: 5px; cursor: pointer; }
+        /* Area Menu (Kiri) */
+        .main-content { }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        
+        /* Kartu Produk */
+        .card { background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow: hidden; transition: transform 0.2s, box-shadow 0.2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 15px rgba(0,0,0,0.1); }
+        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card h3 { margin: 0 0 5px 0; font-size: 1.1rem; color: #2c3e50; }
+        .desc { font-size: 0.85rem; color: #7f8c8d; margin-bottom: 10px; flex-grow: 1; }
+        .meta { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .price { color: #e67e22; font-weight: bold; font-size: 1.1rem; }
+        .stock { font-size: 0.85rem; padding: 3px 8px; background: #ecf0f1; border-radius: 4px; color: #7f8c8d; }
+        
+        .btn-add { width: 100%; background: #3498db; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: 600; transition: background 0.2s; }
         .btn-add:hover { background: #2980b9; }
+        .btn-add:active { transform: scale(0.98); }
 
-        /* Keranjang */
-        .cart-panel { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); height: fit-content; position: sticky; top: 20px; }
-        .cart-item { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #eee; padding: 10px 0; }
-        .total-section { margin-top: 20px; border-top: 2px solid #333; padding-top: 10px; font-weight: bold; font-size: 1.2em; display: flex; justify-content: space-between; }
-        .btn-checkout { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; font-size: 1.1em; margin-top: 20px; border-radius: 5px; cursor: pointer; }
-        .btn-checkout:disabled { background: #ccc; cursor: not-allowed; }
+        /* Panel Keranjang (Kanan) */
+        .cart-panel { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); height: fit-content; position: sticky; top: 20px; display: flex; flex-direction: column; }
+        .cart-panel h3 { margin-top: 0; border-bottom: 2px solid #f0f2f5; padding-bottom: 15px; }
         
-        /* Form Pelanggan */
         .form-group { margin-bottom: 15px; }
-        .form-group label { display: block; margin-bottom: 5px; font-weight: bold; }
-        .form-group input { width: 100%; padding: 8px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 4px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        .form-group input { width: 100%; padding: 10px; box-sizing: border-box; border: 1px solid #ddd; border-radius: 6px; font-size: 1rem; }
+        
+        #cart-items { flex-grow: 1; max-height: 400px; overflow-y: auto; margin-bottom: 15px; }
+        .cart-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 0; border-bottom: 1px dashed #eee; animation: fadeIn 0.3s; }
+        .cart-item-info b { display: block; font-size: 0.95rem; }
+        .cart-item-info small { color: #7f8c8d; }
+        
+        .total-section { border-top: 2px solid #333; padding-top: 15px; margin-top: auto; }
+        .total-row { display: flex; justify-content: space-between; font-size: 1.2rem; font-weight: bold; color: #2c3e50; }
+        
+        .btn-checkout { width: 100%; background: #27ae60; color: white; border: none; padding: 15px; font-size: 1rem; font-weight: bold; margin-top: 20px; border-radius: 6px; cursor: pointer; transition: background 0.2s; }
+        .btn-checkout:hover { background: #219150; }
+        .btn-checkout:disabled { background: #bdc3c7; cursor: not-allowed; }
+
+        /* Loading & Error State */
+        #loading { grid-column: 1 / -1; text-align: center; padding: 40px; font-size: 1.2rem; color: #7f8c8d; }
+        .error-box { background: #fee2e2; border: 1px solid #ef4444; color: #b91c1c; padding: 20px; border-radius: 8px; text-align: left; }
+        
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container { grid-template-columns: 1fr; }
+            .cart-panel { position: static; margin-top: 20px; }
+        }
     </style>
 </head>
 <body>
@@ -38,78 +66,127 @@
         <h1>☕ Sistem Kasir Seduhin</h1>
 
         <div class="main-content">
-            <div id="loading">Sedang mengambil data dari Backend...</div>
+            <div id="loading">
+                <div class="spinner">⏳</div> Sedang menghubungkan ke Server...
+            </div>
             <div id="menu-container" class="menu-grid"></div>
         </div>
 
         <div class="cart-panel">
-            <h3>Keranjang Pesanan</h3>
+            <h3>🛒 Keranjang</h3>
             
             <div class="form-group">
                 <label>Nama Pelanggan</label>
-                <input type="text" id="custName" placeholder="Contoh: Budi">
+                <input type="text" id="custName" placeholder="Masukkan nama..." autocomplete="off">
             </div>
 
             <div id="cart-items">
-                <p style="color:#999; text-align:center;">Belum ada item</p>
+                <div style="text-align:center; color:#95a5a6; padding: 20px 0;">
+                    Keranjang kosong
+                </div>
             </div>
 
             <div class="total-section">
-                <span>Total:</span>
-                <span id="cart-total">Rp 0</span>
+                <div class="total-row">
+                    <span>Total</span>
+                    <span id="cart-total">Rp 0</span>
+                </div>
             </div>
 
-            <button id="btnCheckout" class="btn-checkout" onclick="checkout()" disabled>BAYAR SEKARANG</button>
+            <button id="btnCheckout" class="btn-checkout" onclick="checkout()" disabled>
+                BAYAR SEKARANG
+            </button>
         </div>
     </div>
 
     <script>
         // --- KONFIGURASI API ---
-        // Karena kita pakai Router pintar, kita tembak endpoint public
         const API_BASE = '/public'; 
         
         let cart = [];
         let allMenus = [];
 
-        // 1. Load Data saat Web Dibuka
+        // 1. Load Data Menu (Dengan Error Handling Lengkap)
         async function loadMenu() {
+            const loading = document.getElementById('loading');
             try {
+                // Request ke Backend
                 const response = await fetch(`${API_BASE}/menus`);
-                const result = await response.json();
                 
-                if(result.data) {
+                // Ambil text mentah dulu untuk diagnosa jika bukan JSON
+                const text = await response.text();
+                let result;
+
+                try {
+                    result = JSON.parse(text);
+                } catch (e) {
+                    // Jika gagal parse JSON, berarti Server error (biasanya error PHP yg bocor ke HTML)
+                    throw new Error(`Server merespon dengan format salah (Bukan JSON).<br><br><strong>Respon Awal:</strong><br>${text.substring(0, 200)}...`);
+                }
+
+                // Cek status code dari backend logic
+                if (!response.ok || (result.status_code && result.status_code >= 400)) {
+                    throw new Error(result.message || "Terjadi kesalahan di server.");
+                }
+                
+                // Render Data
+                if (result.data) {
                     allMenus = result.data;
                     renderMenu(allMenus);
-                    document.getElementById('loading').style.display = 'none';
+                    loading.style.display = 'none';
+                } else {
+                    throw new Error("Data menu kosong.");
                 }
+
             } catch (error) {
-                document.getElementById('loading').innerHTML = 
-                    `<span style="color:red">Gagal konek ke API: ${error.message}</span>`;
+                // Tampilkan Error Merah di Layar
+                loading.innerHTML = `
+                    <div class="error-box">
+                        <h3>⚠️ Gagal Memuat Data!</h3>
+                        <p>${error.message}</p>
+                        <hr style="border:0; border-top:1px solid #ffcccc; margin:10px 0;">
+                        <small>Cek console browser (F12) untuk detail lengkap.</small><br>
+                        <button onclick="location.reload()" style="margin-top:10px; padding:5px 10px; cursor:pointer;">Coba Lagi</button>
+                    </div>
+                `;
+                console.error("DEBUG ERROR:", error);
             }
         }
 
-        // 2. Render Menu ke Layar
+        // 2. Render Menu HTML
         function renderMenu(menus) {
             const container = document.getElementById('menu-container');
             container.innerHTML = menus.map(menu => `
                 <div class="card">
-                    <h3>${menu.nama_produk}</h3>
-                    <div class="price">Rp ${parseInt(menu.harga).toLocaleString('id-ID')}</div>
-                    <div class="stock">Stok: ${menu.stok}</div>
-                    <button class="btn-add" onclick="addToCart(${menu.id})">
-                        + Tambah
-                    </button>
+                    <div class="card-body">
+                        <h3>${menu.nama_produk}</h3>
+                        <div class="desc">${menu.deskripsi || '-'}</div>
+                        <div class="meta">
+                            <span class="price">Rp ${parseInt(menu.harga).toLocaleString('id-ID')}</span>
+                            <span class="stock">Stok: ${menu.stok}</span>
+                        </div>
+                        <button class="btn-add" onclick="addToCart(${menu.id})" ${menu.stok <= 0 ? 'disabled style="background:#ccc; cursor:not-allowed;"' : ''}>
+                            ${menu.stok > 0 ? '+ Tambah' : 'Habis'}
+                        </button>
+                    </div>
                 </div>
             `).join('');
         }
 
-        // 3. Tambah Item ke Keranjang
+        // 3. Tambah Item ke Keranjang Logic
         function addToCart(menuId) {
             const menu = allMenus.find(m => m.id === menuId);
-            
             const existing = cart.find(item => item.menu_id === menuId);
+            
+            // Cek stok lokal
+            const currentQty = existing ? existing.qty : 0;
+            if (currentQty >= menu.stok) {
+                alert("Stok tidak cukup!");
+                return;
+            }
+
             if (existing) {
-                if(existing.qty < menu.stok) existing.qty++;
+                existing.qty++;
             } else {
                 cart.push({
                     menu_id: menu.id,
@@ -121,40 +198,57 @@
             renderCart();
         }
 
-        // 4. Render Keranjang
+        // 4. Render Tampilan Keranjang
         function renderCart() {
             const container = document.getElementById('cart-items');
-            if(cart.length === 0) {
-                container.innerHTML = '<p style="color:#999; text-align:center;">Belum ada item</p>';
-                document.getElementById('btnCheckout').disabled = true;
-                document.getElementById('cart-total').innerText = 'Rp 0';
+            const btnCheckout = document.getElementById('btnCheckout');
+            const totalDisplay = document.getElementById('cart-total');
+
+            if (cart.length === 0) {
+                container.innerHTML = '<div style="text-align:center; color:#95a5a6; padding: 20px 0;">Keranjang kosong</div>';
+                btnCheckout.disabled = true;
+                totalDisplay.innerText = 'Rp 0';
                 return;
             }
 
             let total = 0;
-            container.innerHTML = cart.map(item => {
+            container.innerHTML = cart.map((item, index) => {
                 const subtotal = item.price * item.qty;
                 total += subtotal;
                 return `
                 <div class="cart-item">
-                    <div>
-                        <b>${item.name}</b><br>
-                        <small>Rp ${item.price} x ${item.qty}</small>
+                    <div class="cart-item-info">
+                        <b>${item.name}</b>
+                        <small>Rp ${parseInt(item.price).toLocaleString()} x ${item.qty}</small>
                     </div>
-                    <div>Rp ${subtotal.toLocaleString()}</div>
+                    <div>
+                        <strong>Rp ${subtotal.toLocaleString()}</strong>
+                        <button onclick="removeItem(${index})" style="margin-left:5px; background:none; border:none; color:red; cursor:pointer;">&times;</button>
+                    </div>
                 </div>`;
             }).join('');
 
-            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
-            document.getElementById('btnCheckout').disabled = false;
+            totalDisplay.innerText = 'Rp ' + total.toLocaleString('id-ID');
+            btnCheckout.disabled = false;
+        }
+
+        // Hapus item dari keranjang
+        function removeItem(index) {
+            cart.splice(index, 1);
+            renderCart();
         }
 
         // 5. Checkout (Kirim ke Backend)
         async function checkout() {
-            const nama = document.getElementById('custName').value;
-            if(!nama) { alert("Isi nama pelanggan dulu!"); return; }
+            const nama = document.getElementById('custName').value.trim();
+            if (!nama) { 
+                alert("Mohon isi nama pelanggan terlebih dahulu!"); 
+                document.getElementById('custName').focus();
+                return; 
+            }
 
             const btn = document.getElementById('btnCheckout');
+            const originalText = btn.innerHTML;
             btn.innerHTML = "Memproses...";
             btn.disabled = true;
 
@@ -164,7 +258,6 @@
             };
 
             try {
-                // POST ke API Backend buatanmu
                 const response = await fetch(`${API_BASE}/orders`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -173,24 +266,25 @@
 
                 const result = await response.json();
 
-                if(response.ok) {
-                    alert("✅ Sukses! Order ID: " + result.data.id);
-                    cart = []; // Kosongkan keranjang
+                if (response.ok && result.success) {
+                    alert(`✅ Transaksi Berhasil!\nID Order: ${result.data.id}\nTotal: Rp ${result.data.total}`);
+                    cart = []; // Reset keranjang
                     document.getElementById('custName').value = '';
                     renderCart();
-                    loadMenu(); // Refresh stok (kalau backend update stok)
+                    loadMenu(); // Refresh data menu untuk update stok terbaru
                 } else {
-                    alert("❌ Gagal: " + (result.message || JSON.stringify(result)));
+                    throw new Error(result.message || "Gagal memproses transaksi");
                 }
             } catch (error) {
-                alert("❌ Error Server: " + error.message);
+                alert("❌ Transaksi Gagal: " + error.message);
+                console.error(error);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
-
-            btn.innerHTML = "BAYAR SEKARANG";
-            btn.disabled = false;
         }
 
-        // Jalankan saat load
+        // Jalankan saat halaman dibuka
         loadMenu();
     </script>
 </body>
