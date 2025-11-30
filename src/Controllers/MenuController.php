@@ -1,65 +1,70 @@
 <?php
-
 namespace App\Controllers;
 
+use App\Core\Controller;
 use App\Services\MenuService;
-use App\Core\Request; // Sesuaikan dengan class Request framework Anda
-use App\Core\Response; // Sesuaikan dengan class Response framework Anda
-use Exception;
+use App\Builders\ApiResponseBuilder;
 
-class MenuController
+// Pastikan extend Controller
+class MenuController extends Controller
 {
-    private MenuService $menuService;
+    private MenuService $service;
 
-    // INJECTION: Controller minta Service, bukan bikin sendiri
-    public function __construct(MenuService $menuService)
-    {
-        $this->menuService = $menuService;
+    public function __construct(MenuService $service) 
+    { 
+        $this->service = $service; 
     }
 
-    public function store()
+    // --- METHOD INDEX (Ini yang dicari error tadi) ---
+    public function index(): void
     {
-        // 1. Ambil input (misal dari $_POST atau Request object)
-        $data = [
-            'nama_produk' => $_POST['nama_produk'] ?? '',
-            'harga' => (float) ($_POST['harga'] ?? 0),
-            'stok' => (int) ($_POST['stok'] ?? 0)
-        ];
-
         try {
-            // 2. Lempar ke Service
-            $menu = $this->menuService->createMenu($data);
-
-            // 3. Sukses
-            header('Content-Type: application/json');
-            http_response_code(201);
-            echo json_encode([
-                'status' => 'success',
-                'data' => [
-                    'id' => $menu->getId(),
-                    'nama_produk' => $menu->getNamaProduk()
-                ]
-            ]);
-
-        } catch (\App\Exceptions\ValidationException $e) {
-            // 4. Gagal Validasi (Error 400)
-            header('Content-Type: application/json');
-            http_response_code(400);
-            echo json_encode([
-                'status' => 'fail',
-                'errors' => $e->getErrors() // Array error dari exception
-            ]);
-
-        } catch (Exception $e) {
-            // 5. Gagal Server/DB (Error 500)
-            header('Content-Type: application/json');
-            http_response_code(500);
-            echo json_encode([
-                'status' => 'error',
-                'message' => $e->getMessage()
-            ]);
+            $data = $this->service->list($_GET);
+            $this->send($data);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 500)->send();
         }
     }
-    
-    // ... method index, show, update, delete lainnya
+
+    public function show(int $id): void
+    {
+        try {
+            $data = $this->service->get($id);
+            $this->send($data);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 404)->send();
+        }
+    }
+
+    public function store(): void
+    {
+        try {
+            $payload = $this->getJson();
+            $menu = $this->service->create($payload);
+            ApiResponseBuilder::created($menu, 'Menu created')->send();
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
+        }
+    }
+
+    public function update(int $id): void
+    {
+        try {
+            $payload = $this->getJson();
+            $menu = $this->service->update($id, $payload);
+            $this->send($menu);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
+        }
+    }
+
+    public function destroy(int $id): void
+    {
+        try {
+            $this->service->delete($id);
+            $this->send(['deleted' => true]);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
+        }
+    }
 }
