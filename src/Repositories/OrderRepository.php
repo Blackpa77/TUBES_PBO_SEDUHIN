@@ -11,7 +11,7 @@ class OrderRepository
 {
     private PDO $db;
 
-    // Konstruktor tanpa parameter (sesuai manual wiring di index.php)
+    // Konstruktor tanpa parameter (Karena di index.php kita pakai 'new OrderRepository()')
     public function __construct() 
     { 
         $this->db = Database::getInstance()->getConnection(); 
@@ -22,7 +22,7 @@ class OrderRepository
         $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
         $results = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            // Gunakan Factory
+            // Gunakan Factory untuk konsistensi
             $results[] = OrderFactory::fromDb($row);
         }
         return $results;
@@ -37,12 +37,17 @@ class OrderRepository
         if (!$row) return null;
 
         // Gunakan Factory
-        return OrderFactory::fromDb($row);
+        $order = OrderFactory::fromDb($row);
+
+        // (Opsional) Load items detail jika perlu
+        // $order->items = $this->findItems($id); 
+
+        return $order;
     }
 
     public function save(Order $order): bool
     {
-        // Set waktu dibuat
+        // Set waktu dibuat sekarang agar tidak null di response
         $order->setCreatedAt(new DateTime());
         
         // 1. Simpan Header Order
@@ -57,7 +62,7 @@ class OrderRepository
         ]);
 
         if ($res) {
-            // Ambil ID yang baru dibuat
+            // Ambil ID order yang baru saja dibuat
             $orderId = $this->db->lastInsertId();
             $order->setId((int)$orderId);
 
@@ -84,11 +89,12 @@ class OrderRepository
 
     public function delete(int $id): bool
     {
+        // Delete items otomatis handle by FK Cascade di database, tapi boleh dihapus manual juga
         $stmt = $this->db->prepare("DELETE FROM orders WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
-    // Helper untuk menyimpan item belanjaan
+    // Helper untuk menyimpan rincian item belanjaan
     private function saveItems(Order $order): void
     {
         if (!empty($order->items)) {
@@ -96,8 +102,7 @@ class OrderRepository
             $stmt = $this->db->prepare($sqlItem);
             
             foreach ($order->items as $itm) {
-                // Pastikan properti item tersedia
-                // Service mengirim object stdClass, jadi akses pake ->
+                // Pastikan properti item tersedia (akses sebagai object stdClass dari Service)
                 $menuId = $itm->menuId ?? 0;
                 $qty    = $itm->qty ?? 0;
                 $price  = $itm->price ?? 0;
