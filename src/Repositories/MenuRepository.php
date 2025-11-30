@@ -6,11 +6,11 @@ use App\Models\Menu;
 use PDO;
 use DateTime;
 
+// Pastikan implements interface ini ada
 class MenuRepository implements MenuRepositoryInterface
 {
     private PDO $db;
 
-    // Menerima Database dari luar (Dependency Injection)
     public function __construct(Database $database)
     {
         $this->db = $database->getConnection();
