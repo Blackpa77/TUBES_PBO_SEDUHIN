@@ -8,7 +8,6 @@ class Menu extends Model
 {
     use Validatable;
 
-    // Properti sesuai database
     private string $namaProduk;
     private int $idKategori;
     private float $harga;
@@ -16,7 +15,6 @@ class Menu extends Model
     private int $stok;
     private ?string $fotoProduk;
 
-    // Constructor
     public function __construct(
         string $namaProduk = '', 
         float $harga = 0, 
@@ -33,15 +31,23 @@ class Menu extends Model
         $this->fotoProduk = $fotoProduk;
     }
 
-    // --- GETTERS (Ini yang dicari error tadi) ---
-    public function getStock(): int { return $this->stok; }
-    public function getHarga(): float { return $this->harga; }
-    public function getNamaProduk(): string { return $this->namaProduk; }
+    // --- GETTERS (VERSI INDONESIA & INGGRIS) ---
+    // Agar service yang minta bahasa manapun tetap jalan
+    
+    public function getStok(): int { return $this->stok; }   // Indo
+    public function getStock(): int { return $this->stok; }  // Inggris
+
+    public function getHarga(): float { return $this->harga; } // Indo
+    public function getPrice(): float { return $this->harga; } // Inggris
+
+    public function getNamaProduk(): string { return $this->namaProduk; } // Indo
+    public function getName(): string { return $this->namaProduk; }       // Inggris
+
     public function getIdKategori(): int { return $this->idKategori; }
     public function getDeskripsi(): string { return $this->deskripsi; }
     public function getFotoProduk(): ?string { return $this->fotoProduk; }
 
-    // --- LOGIC BISNIS (Penting untuk Transaksi) ---
+    // --- LOGIC BISNIS ---
     public function reduceStock(int $qty = 1): void 
     { 
         $this->stok -= $qty;
@@ -60,7 +66,6 @@ class Menu extends Model
         return !$this->hasErrors();
     }
 
-    // --- MAPPING KE ARRAY (Untuk JSON) ---
     public function toArray(): array
     {
         return [
@@ -76,24 +81,8 @@ class Menu extends Model
         ];
     }
 
-    // --- KONFIGURASI MODEL ---
     protected static function tableName(): string { return 'produk'; }
-
-    protected function insert(): bool
-    {
-        // Placeholder karena insert ditangani Repository
-        return false; 
-    }
-
-    protected function update(): bool
-    {
-        // Placeholder karena update ditangani Repository
-        return false;
-    }
-
-    public function delete(): bool
-    {
-        // Placeholder karena delete ditangani Repository
-        return false;
-    }
+    protected function insert(): bool { return false; }
+    protected function update(): bool { return false; }
+    public function delete(): bool { return false; }
 }
