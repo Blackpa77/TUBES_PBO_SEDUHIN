@@ -1,73 +1,81 @@
 <?php
+
 namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Menu;
 use PDO;
 
-class MenuRepository
+class MenuRepository implements MenuRepositoryInterface
 {
     private PDO $db;
 
-    public function __construct()
+    // Dependency Injection: Database disuntikkan, bukan dipanggil statis
+    public function __construct(Database $database)
     {
-        $this->db = Database::getInstance()->getConnection();
+        $this->db = $database->getConnection();
     }
 
-    public function findById(int $id): ?Menu
+    public function find(int $id): ?Menu
     {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = ?");
         $stmt->execute([$id]);
-        
-        $row = $stmt->fetch();
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+
         if (!$row) return null;
 
-        $menu = new Menu($row);
-        $menu->setId((int)$row['id']);
-        if (!empty($row['created_at'])) {
-            $menu->setCreatedAt(new \DateTime($row['created_at']));
-        }
+        // Mapping Manual Row ke Object (Bisa juga pakai Factory)
+        $menu = new Menu($row['nama_produk'], $row['harga'], $row['stok']);
+        $menu->setId($row['id']);
+        
         return $menu;
     }
 
-    // --- INI METHOD YANG HILANG ---
-    
-    public function findAll(array $filters = []): array
+    public function save(Menu $menu): bool
     {
-        $sql = "SELECT * FROM produk WHERE 1=1";
-        $params = [];
-        
-        if (!empty($filters['category'])) { 
-            $sql .= " AND id_kategori = ?"; 
-            $params[] = $filters['category']; 
+        // Logika Pintar: Cek ID untuk tentukan Insert atau Update
+        if ($menu->getId() === null) {
+            return $this->insert($menu);
+        } else {
+            return $this->update($menu);
         }
-        
-        $sql .= " ORDER BY created_at DESC";
-        
-        $stmt = $this->db->prepare($sql);
-        $stmt->execute($params);
-        
-        $res = [];
-        while ($r = $stmt->fetch()) {
-            $m = new Menu($r); 
-            $m->setId((int)$r['id']);
-            if (!empty($r['created_at'])) {
-                $m->setCreatedAt(new \DateTime($r['created_at']));
-            }
-            $res[] = $m;
-        }
-        return $res;
     }
 
-    public function save(Menu $menu): bool 
-    { 
-        return $menu->save(); 
+    private function insert(Menu $menu): bool
+    {
+        $sql = "INSERT INTO produk (nama_produk, harga, stok) VALUES (?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        
+        $result = $stmt->execute([
+            $menu->getNamaProduk(),
+            $menu->getHarga(),
+            $menu->getStok()
+        ]);
+
+        if ($result) {
+            // Set ID yang baru dibuat kembali ke objek
+            $menu->setId((int)$this->db->lastInsertId());
+        }
+
+        return $result;
     }
-    
+
+    private function update(Menu $menu): bool
+    {
+        $sql = "UPDATE produk SET nama_produk = ?, harga = ?, stok = ? WHERE id = ?";
+        $stmt = $this->db->prepare($sql);
+        
+        return $stmt->execute([
+            $menu->getNamaProduk(),
+            $menu->getHarga(),
+            $menu->getStok(),
+            $menu->getId()
+        ]);
+    }
+
     public function delete(int $id): bool
     {
-        $menu = $this->findById($id);
-        if (!$menu) return false;
-        return $menu->delete();
+        $stmt = $this->db->prepare("DELETE FROM produk WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }
