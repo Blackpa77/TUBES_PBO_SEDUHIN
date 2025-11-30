@@ -26,26 +26,35 @@
         .login-box input { width: 100%; padding: 12px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; }
         
         /* Menu Grid (Kasir) */
-        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 20px; }
-        .card { background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: 0.2s; }
-        .card:hover { transform: translateY(-5px); }
-        .card-img { height: 140px; background: #eee; display: flex; align-items: center; justify-content: center; overflow: hidden; }
-        .card-img img { width: 100%; height: 100%; object-fit: cover; }
-        .card-body { padding: 15px; }
-        .price { color: var(--primary); font-weight: bold; font-size: 1.1rem; }
+        .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+        .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
+        .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
+        
+        /* PERBAIKAN GAMBAR DI KASIR */
+        .card-img { height: 160px; width: 100%; overflow: hidden; background: #eee; }
+        .card-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
+        .card:hover .card-img img { transform: scale(1.05); }
+        
+        .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
+        .card h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #2d3436; }
+        .price { color: var(--primary); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
+        .stock-badge { font-size: 0.8rem; background: #dfe6e9; padding: 2px 8px; border-radius: 4px; color: #636e72; display: inline-block; margin-bottom: 10px; }
 
         /* Tables */
-        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; }
-        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
-        th { background: #eee; font-weight: 600; }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; color: white; }
-        .bg-pending { background: #f39c12; }
+        table { width: 100%; border-collapse: collapse; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; vertical-align: middle; }
+        th { background: #f8f9fa; font-weight: 700; color: #2d3436; }
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 0.8rem; color: white; font-weight: 600; }
+        .bg-pending { background: #f1c40f; color: #333; }
         .bg-paid { background: var(--success); }
         .bg-cancel { background: var(--danger); }
+        
+        /* PERBAIKAN GAMBAR DI TABEL */
+        .thumb-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
 
         /* Navigation */
-        .nav-link { display: block; padding: 12px; margin: 5px 0; color: #666; text-decoration: none; border-radius: 6px; }
-        .nav-link:hover, .nav-link.active { background: var(--light); color: var(--primary); font-weight: bold; }
+        .nav-link { display: block; padding: 12px; margin: 5px 0; color: #636e72; text-decoration: none; border-radius: 6px; font-weight: 500; }
+        .nav-link:hover, .nav-link.active { background: #eef2ff; color: var(--primary); font-weight: 700; }
         .hidden { display: none !important; }
     </style>
 </head>
@@ -53,85 +62,101 @@
 
     <div id="login-screen">
         <div class="login-box">
-            <h2>☕ Seduhin Login</h2>
-            <p>Silakan masuk untuk akses sistem</p>
+            <h1 style="color:var(--primary); margin-bottom:10px;">☕ Seduhin</h1>
+            <p style="color:#666; margin-bottom:20px;">Login Admin / Kasir</p>
             <form onsubmit="handleLogin(event)">
                 <input type="email" id="email" placeholder="Email (admin@seduhin.com)" required>
                 <input type="password" id="password" placeholder="Password" required>
-                <button type="submit" class="btn btn-primary" style="width:100%">MASUK</button>
+                <button type="submit" class="btn btn-primary" style="width:100%; margin-top:10px;">MASUK SISTEM</button>
             </form>
         </div>
     </div>
 
     <div id="app-container" class="app-container hidden">
         <div class="sidebar">
-            <h2 style="color:var(--primary); margin-bottom: 30px;">☕ Seduhin</h2>
-            <a href="#" class="nav-link active" onclick="showPage('pos')">🖥️ Kasir</a>
-            <a href="#" class="nav-link" onclick="showPage('history')">📜 Riwayat Transaksi</a>
-            <a href="#" class="nav-link" onclick="showPage('menu-mgr')">📦 Kelola Menu</a>
+            <h2 style="color:var(--primary); margin-bottom: 30px; padding-left: 10px;">☕ Seduhin</h2>
+            <a href="#" class="nav-link active" onclick="showPage(event, 'pos')">🖥️ Kasir</a>
+            <a href="#" class="nav-link" onclick="showPage(event, 'history')">📜 Riwayat Transaksi</a>
+            <a href="#" class="nav-link" onclick="showPage(event, 'menu-mgr')">📦 Kelola Menu</a>
             <div style="flex-grow:1"></div>
-            <button onclick="logout()" class="btn btn-danger">Keluar</button>
+            <button onclick="logout()" class="btn btn-danger" style="width:100%">Keluar</button>
         </div>
 
         <div class="content">
             
             <div id="page-pos">
-                <div style="display:grid; grid-template-columns: 2fr 1fr; gap: 20px;">
+                <div style="display:grid; grid-template-columns: 3fr 1.2fr; gap: 25px;">
                     <div>
-                        <h2>Daftar Menu</h2>
-                        <div id="menu-grid" class="menu-grid">Loading...</div>
+                        <h2 style="margin-top:0">Daftar Menu</h2>
+                        <div id="menu-grid" class="menu-grid">
+                            <div style="text-align:center; padding:20px;">Loading data...</div>
+                        </div>
                     </div>
-                    <div style="background:white; padding:20px; border-radius:10px; height:fit-content;">
-                        <h3>🛒 Keranjang</h3>
-                        <input type="text" id="custName" placeholder="Nama Pelanggan" style="width:100%; padding:10px; margin-bottom:10px; border:1px solid #ddd; border-radius:5px;">
-                        <div id="cart-items" style="margin-bottom:20px; max-height:300px; overflow-y:auto;">
-                            <p style="color:#999; text-align:center">Keranjang kosong</p>
+                    
+                    <div style="background:white; padding:25px; border-radius:12px; height:fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position:sticky; top:20px;">
+                        <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px;">🛒 Keranjang</h3>
+                        
+                        <div style="margin-bottom:15px;">
+                            <label style="font-size:0.9rem; font-weight:600; display:block; margin-bottom:5px;">Nama Pelanggan</label>
+                            <input type="text" id="custName" placeholder="Masukkan nama..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                         </div>
-                        <div style="border-top:2px solid #eee; padding-top:10px; display:flex; justify-content:space-between; font-weight:bold; font-size:1.2rem;">
-                            <span>Total:</span>
-                            <span id="cart-total">Rp 0</span>
+
+                        <div id="cart-items" style="margin-bottom:20px; max-height:350px; overflow-y:auto; min-height:100px;">
+                            <p style="color:#999; text-align:center; margin-top:30px;">Keranjang masih kosong</p>
                         </div>
-                        <button onclick="checkout()" class="btn btn-success" style="width:100%; margin-top:20px;">BAYAR SEKARANG</button>
+
+                        <div style="border-top:2px solid #333; padding-top:15px; margin-bottom:20px;">
+                            <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.3rem; color:#2d3436;">
+                                <span>Total</span>
+                                <span id="cart-total">Rp 0</span>
+                            </div>
+                        </div>
+                        
+                        <button onclick="checkout()" class="btn btn-success" style="width:100%; padding:12px; font-size:1rem;">BAYAR SEKARANG</button>
                     </div>
                 </div>
             </div>
 
             <div id="page-history" class="hidden">
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
-                    <h2>Riwayat Transaksi</h2>
-                    <button onclick="loadOrders()" class="btn btn-primary">Refresh Data</button>
+                    <h2 style="margin:0;">Riwayat Transaksi</h2>
+                    <button onclick="loadOrders()" class="btn btn-primary">🔄 Refresh Data</button>
                 </div>
-                <table id="history-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Tanggal</th>
-                            <th>Pelanggan</th>
-                            <th>Total</th>
-                            <th>Status</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="history-body"></tbody>
-                </table>
+                <div style="overflow-x:auto;">
+                    <table id="history-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Tanggal</th>
+                                <th>Pelanggan</th>
+                                <th>Total</th>
+                                <th>Status</th>
+                                <th style="text-align:center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="history-body"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div id="page-menu-mgr" class="hidden">
-                <h2>Manajemen Menu</h2>
-                <p>Hapus menu yang tidak tersedia.</p>
-                <table id="mgr-table">
-                    <thead>
-                        <tr>
-                            <th>ID</th>
-                            <th>Foto</th>
-                            <th>Nama Produk</th>
-                            <th>Harga</th>
-                            <th>Stok</th>
-                            <th>Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mgr-body"></tbody>
-                </table>
+                <h2 style="margin-top:0;">Manajemen Menu</h2>
+                <p style="color:#666; margin-bottom:20px;">Kelola ketersediaan produk.</p>
+                <div style="overflow-x:auto;">
+                    <table id="mgr-table">
+                        <thead>
+                            <tr>
+                                <th>ID</th>
+                                <th>Foto</th>
+                                <th>Nama Produk</th>
+                                <th>Harga</th>
+                                <th>Stok</th>
+                                <th style="text-align:center;">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mgr-body"></tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -173,80 +198,109 @@
         }
 
         function logout() {
-            localStorage.removeItem('seduhin_token');
-            location.reload();
+            if(confirm('Yakin ingin keluar?')) {
+                localStorage.removeItem('seduhin_token');
+                location.reload();
+            }
         }
 
-        // --- PAGE NAVIGATION ---
-        function showPage(pageId) {
+        // --- NAVIGATION ---
+        function showPage(e, pageId) {
+            if(e) e.preventDefault();
+            
+            // Hide all pages
             document.querySelectorAll('.content > div').forEach(div => div.classList.add('hidden'));
+            // Show target page
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
             
-            // Highlight Menu
+            // Update Active Link
             document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
-            event.target.classList.add('active');
+            if(e) e.target.classList.add('active');
 
+            // Load Data Specific
             if(pageId === 'history') loadOrders();
             if(pageId === 'menu-mgr') loadMenuMgr();
         }
 
-        // --- DATA LOADING ---
+        // --- DATA: MENU ---
         async function loadMenus() {
-            const res = await fetch(`${API_BASE}/menus`);
-            const json = await res.json();
-            allMenus = json.data;
-            renderMenuGrid();
+            try {
+                const res = await fetch(`${API_BASE}/menus`);
+                const json = await res.json();
+                allMenus = json.data;
+                renderMenuGrid();
+            } catch(err) {
+                console.error(err);
+            }
         }
 
         function renderMenuGrid() {
             const container = document.getElementById('menu-grid');
+            if(allMenus.length === 0) {
+                container.innerHTML = "Data menu kosong.";
+                return;
+            }
+
+            // PERBAIKAN GAMBAR DI SINI:
+            // Kita langsung pakai URL dari database (https://...)
             container.innerHTML = allMenus.map(m => `
                 <div class="card">
                     <div class="card-img">
                         ${m.foto_produk ? 
-                            `<img src="/public/images/${m.foto_produk}" alt="${m.nama_produk}">` : 
-                            `<span style="font-size:2rem">☕</span>`}
+                            `<img src="${m.foto_produk}" alt="${m.nama_produk}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">` : 
+                            `<span style="font-size:3rem; color:#ccc;">☕</span>`}
                     </div>
                     <div class="card-body">
                         <h4>${m.nama_produk}</h4>
-                        <div class="price">Rp ${parseInt(m.harga).toLocaleString()}</div>
-                        <small>Stok: ${m.stok}</small>
-                        <button onclick="addToCart(${m.id})" class="btn btn-primary" style="width:100%; margin-top:10px; font-size:0.8rem">+ Tambah</button>
+                        <div class="price">Rp ${parseInt(m.harga).toLocaleString('id-ID')}</div>
+                        <div class="stock-badge">Stok: ${m.stok}</div>
+                        <button onclick="addToCart(${m.id})" class="btn btn-primary" style="width:100%; margin-top:auto;" ${m.stok<=0?'disabled style="background:#ccc"':''}>
+                            ${m.stok > 0 ? '+ Tambah' : 'Habis'}
+                        </button>
                     </div>
                 </div>
             `).join('');
         }
 
-        // --- CART LOGIC ---
+        // --- CART ---
         function addToCart(id) {
             const menu = allMenus.find(m => m.id === id);
             const exist = cart.find(c => c.id === id);
-            if(exist) exist.qty++; else cart.push({id, name:menu.nama_produk, price:menu.harga, qty:1});
+            
+            if(exist && exist.qty >= menu.stok) return alert("Stok tidak cukup!");
+
+            if(exist) exist.qty++; 
+            else cart.push({id, name:menu.nama_produk, price:menu.harga, qty:1});
+            
             renderCart();
         }
 
         function renderCart() {
             const container = document.getElementById('cart-items');
             let total = 0;
-            if(cart.length === 0) container.innerHTML = '<p style="text-align:center;color:#999">Keranjang kosong</p>';
-            else {
+            if(cart.length === 0) {
+                container.innerHTML = '<p style="text-align:center;color:#999; margin-top:30px;">Keranjang kosong</p>';
+            } else {
                 container.innerHTML = cart.map((c, i) => {
                     total += c.price * c.qty;
-                    return `<div style="display:flex; justify-content:space-between; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:5px;">
-                        <div><b>${c.name}</b><br><small>${c.qty} x ${c.price}</small></div>
+                    return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
+                        <div>
+                            <div style="font-weight:600;">${c.name}</div>
+                            <small style="color:#666;">${c.qty} x Rp ${parseInt(c.price).toLocaleString()}</small>
+                        </div>
                         <div style="text-align:right">
-                            Rp ${(c.price*c.qty).toLocaleString()}<br>
-                            <a href="#" onclick="cart.splice(${i},1);renderCart()" style="color:red;font-size:0.8rem">Hapus</a>
+                            <div style="font-weight:bold;">Rp ${(c.price*c.qty).toLocaleString()}</div>
+                            <a href="#" onclick="cart.splice(${i},1);renderCart()" style="color:var(--danger);font-size:0.8rem;text-decoration:none;">&times; Hapus</a>
                         </div>
                     </div>`;
                 }).join('');
             }
-            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString();
+            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
         }
 
         async function checkout() {
             const nama = document.getElementById('custName').value;
-            if(!nama) return alert("Isi nama pelanggan!");
+            if(!nama) return alert("Mohon isi nama pelanggan!");
             if(cart.length === 0) return alert("Keranjang kosong!");
 
             const payload = {
@@ -254,22 +308,24 @@
                 items: cart.map(c => ({menu_id: c.id, qty: c.qty}))
             };
 
-            const res = await fetch(`${API_BASE}/orders`, {
-                method: 'POST',
-                body: JSON.stringify(payload)
-            });
-            const json = await res.json();
-            
-            if(json.success) {
-                alert("Transaksi Berhasil!");
-                cart = []; renderCart(); document.getElementById('custName').value = '';
-                loadMenus(); // Refresh stok
-            } else {
-                alert("Gagal: " + json.message);
-            }
+            try {
+                const res = await fetch(`${API_BASE}/orders`, {
+                    method: 'POST',
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                
+                if(json.success) {
+                    alert("✅ Transaksi Berhasil!");
+                    cart = []; renderCart(); document.getElementById('custName').value = '';
+                    loadMenus(); // Refresh stok
+                } else {
+                    alert("Gagal: " + json.message);
+                }
+            } catch(e) { alert("Error: " + e); }
         }
 
-        // --- HISTORY LOGIC ---
+        // --- HISTORY ---
         async function loadOrders() {
             const res = await fetch(`${API_BASE}/orders`);
             const json = await res.json();
@@ -277,22 +333,22 @@
             
             tbody.innerHTML = json.data.map(o => `
                 <tr>
-                    <td>#${o.id}</td>
-                    <td>${o.created_at || '-'}</td>
+                    <td><b>#${o.id}</b></td>
+                    <td>${o.created_at ? new Date(o.created_at).toLocaleString('id-ID') : '-'}</td>
                     <td>${o.nama_pelanggan}</td>
-                    <td>Rp ${parseInt(o.total).toLocaleString()}</td>
-                    <td><span class="badge bg-${o.status}">${o.status}</span></td>
-                    <td>
+                    <td style="font-weight:bold;">Rp ${parseInt(o.total).toLocaleString()}</td>
+                    <td><span class="badge bg-${o.status}">${o.status.toUpperCase()}</span></td>
+                    <td style="text-align:center;">
                         <button onclick="editStatus(${o.id})" class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem">Edit</button>
                         <button onclick="deleteOrder(${o.id})" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem">Hapus</button>
-                        <a href="${API_BASE}/orders/${o.id}/download" target="_blank" class="btn btn-success" style="padding:5px 10px; font-size:0.8rem; text-decoration:none">Unduh</a>
+                        <a href="${API_BASE}/orders/${o.id}/download" target="_blank" class="btn btn-success" style="padding:5px 10px; font-size:0.8rem; text-decoration:none;">🖨️ Struk</a>
                     </td>
                 </tr>
             `).join('');
         }
 
         async function editStatus(id) {
-            const newStatus = prompt("Masukkan status baru (pending/paid/cancel):", "paid");
+            const newStatus = prompt("Update status (pending / paid / cancel):", "paid");
             if(newStatus) {
                 await fetch(`${API_BASE}/orders/${id}`, {
                     method: 'PUT',
@@ -303,23 +359,31 @@
         }
 
         async function deleteOrder(id) {
-            if(confirm("Yakin hapus history ini?")) {
+            if(confirm("Hapus riwayat ini? Data tidak bisa kembali.")) {
                 await fetch(`${API_BASE}/orders/${id}`, { method: 'DELETE' });
                 loadOrders();
             }
         }
 
-        // --- MENU MANAGER LOGIC ---
+        // --- MENU MANAGER ---
         async function loadMenuMgr() {
             const tbody = document.getElementById('mgr-body');
+            
+            // PERBAIKAN GAMBAR DI SINI JUGA
             tbody.innerHTML = allMenus.map(m => `
                 <tr>
                     <td>${m.id}</td>
-                    <td>${m.foto_produk || '-'}</td>
-                    <td>${m.nama_produk}</td>
-                    <td>${m.harga}</td>
+                    <td>
+                        ${m.foto_produk ? 
+                        `<img src="${m.foto_produk}" class="thumb-img" onerror="this.src='https://placehold.co/60'">` : 
+                        '-'}
+                    </td>
+                    <td><b>${m.nama_produk}</b></td>
+                    <td>Rp ${parseInt(m.harga).toLocaleString()}</td>
                     <td>${m.stok}</td>
-                    <td><button onclick="deleteMenu(${m.id})" class="btn btn-danger" style="padding:5px">Hapus</button></td>
+                    <td style="text-align:center;">
+                        <button onclick="deleteMenu(${m.id})" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem">Hapus</button>
+                    </td>
                 </tr>
             `).join('');
         }
@@ -331,7 +395,7 @@
             }
         }
 
-        // Init
+        // Start
         checkAuth();
     </script>
 </body>
