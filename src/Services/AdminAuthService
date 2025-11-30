@@ -17,18 +17,17 @@ class AdminAuthService
     {
         $admin = $this->repo->findByEmail($email);
 
-        // Cek user ada dan password cocok (disini kita pakai plain text sesuai db kamu yg lama, 
-        // idealnya pakai password_verify jika sudah di-hash)
+        // Validasi sederhana (Plain text password sesuai database kamu)
         if (!$admin || $admin->password !== $password) {
             throw new ValidationException("Email atau Password salah!");
         }
 
-        // Return data admin (tanpa password)
+        // Return data sukses
         return [
             'id' => $admin->id,
             'nama' => $admin->nama,
             'email' => $admin->email,
-            'token' => base64_encode("TOKEN_RAHASIA_" . $admin->id) // Simulasi Token
+            'token' => base64_encode("TOKEN_" . $admin->id . "_" . time())
         ];
     }
 }
