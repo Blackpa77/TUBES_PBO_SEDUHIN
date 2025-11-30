@@ -10,7 +10,6 @@ class MenuService
 {
     private MenuRepositoryInterface $repo;
 
-    // Dependency Injection: Minta Interface
     public function __construct(MenuRepositoryInterface $repo) 
     { 
         $this->repo = $repo; 
@@ -27,8 +26,8 @@ class MenuService
         return $m->toArray();
     }
 
+    // UBAH NAMA JADI 'create' (bukan createMenu) agar cocok dengan Controller
     public function create(array $data): array {
-        // Mapping input JSON ke Model Constructor
         $menu = new Menu(
             $data['nama_produk'] ?? $data['name'] ?? '',
             (float)($data['harga'] ?? $data['price'] ?? 0),
@@ -49,7 +48,6 @@ class MenuService
         $menu = $this->repo->findById($id);
         if (!$menu) throw new NotFoundException("Menu not found");
         
-        // Update Data: Buat objek baru dengan data gabungan
         $updatedMenu = new Menu(
             $data['nama_produk'] ?? $data['name'] ?? $menu->getNamaProduk(),
             (float)($data['harga'] ?? $data['price'] ?? $menu->getHarga()),
@@ -68,7 +66,6 @@ class MenuService
     }
 
     public function delete(int $id): void {
-        $deleted = $this->repo->delete($id);
-        if (!$deleted) throw new NotFoundException("Menu not found");
+        $this->repo->delete($id);
     }
 }
