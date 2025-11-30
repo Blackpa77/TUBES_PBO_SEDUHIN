@@ -1,22 +1,39 @@
 openapi: 3.0.3
 info:
   title: Seduhin REST API
-  description: Dokumentasi API untuk Sistem Kasir Kafe Seduhin (Tugas Besar PBO)
+  description: Dokumentasi Lengkap Sistem Kasir Kafe Seduhin (Tugas Besar PBO). Mencakup fitur Autentikasi, Manajemen Menu, dan Transaksi.
   version: 1.0.0
   contact:
     name: Tim Pengembang
-    email: tim@seduhin.com
+    email: admin@seduhin.com
 servers:
   - url: http://tubes_pbo_seduhin.test
     description: Server Lokal (Laragon)
+
 paths:
-  /public/menus:
-    get:
-      summary: Mendapatkan daftar semua menu
-      description: Mengembalikan daftar produk kopi dan snack yang tersedia.
+  # --- AUTHENTICATION ---
+  /auth/login:
+    post:
+      tags:
+        - Auth
+      summary: Login Admin/Kasir
+      description: Masuk untuk mendapatkan akses ke sistem.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                email:
+                  type: string
+                  example: "admin@seduhin.com"
+                password:
+                  type: string
+                  example: "passwordhashed"
       responses:
         '200':
-          description: Berhasil mengambil data
+          description: Login Berhasil
           content:
             application/json:
               schema:
@@ -26,29 +43,71 @@ paths:
                     type: boolean
                     example: true
                   data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/Menu'
-  
-  /public/orders:
+                    type: object
+                    properties:
+                      token:
+                        type: string
+
+  # --- MENUS ---
+  /public/menus:
     get:
-      summary: Mendapatkan daftar riwayat pesanan
+      tags:
+        - Menus
+      summary: Lihat Daftar Menu
+      description: Mengambil semua data menu yang tersedia.
       responses:
         '200':
           description: Berhasil mengambil data
           content:
             application/json:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                  data:
-                    type: array
-                    items:
-                      $ref: '#/components/schemas/OrderResponse'
+                $ref: '#/components/schemas/ApiResponse'
     post:
-      summary: Membuat pesanan baru (Checkout)
+      tags:
+        - Menus
+      summary: Tambah Menu Baru
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Menu'
+      responses:
+        '201':
+          description: Menu berhasil dibuat
+
+  /public/menus/{id}:
+    delete:
+      tags:
+        - Menus
+      summary: Hapus Menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Menu berhasil dihapus
+        '404':
+          description: Menu tidak ditemukan
+
+  # --- ORDERS ---
+  /public/orders:
+    get:
+      tags:
+        - Orders
+      summary: Riwayat Transaksi
+      description: Melihat semua daftar pesanan yang pernah masuk.
+      responses:
+        '200':
+          description: Berhasil
+    post:
+      tags:
+        - Orders
+      summary: Buat Pesanan (Checkout)
+      description: Mencatat transaksi baru dan mengurangi stok otomatis.
       requestBody:
         required: true
         content:
@@ -57,51 +116,109 @@ paths:
               $ref: '#/components/schemas/OrderRequest'
       responses:
         '201':
-          description: Pesanan berhasil dibuat
+          description: Transaksi Berhasil
+
+  /public/orders/{id}:
+    get:
+      tags:
+        - Orders
+      summary: Detail Pesanan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data ditemukan
+    put:
+      tags:
+        - Orders
+      summary: Update Status Pesanan
+      description: Mengubah status pembayaran (pending -> paid).
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                status:
+                  type: string
+                  enum: [pending, paid, cancel]
+      responses:
+        '200':
+          description: Status berhasil diupdate
+    delete:
+      tags:
+        - Orders
+      summary: Hapus Riwayat Pesanan
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Data dihapus
+
+  /public/orders/{id}/download:
+    get:
+      tags:
+        - Orders
+      summary: Download Struk Transaksi
+      description: Mengunduh detail pesanan dalam format Struk HTML/PDF.
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: File Struk terunduh
           content:
-            application/json:
+            text/html:
               schema:
-                type: object
-                properties:
-                  success:
-                    type: boolean
-                    example: true
-                  message:
-                    type: string
-                    example: "Order placed"
-                  data:
-                    $ref: '#/components/schemas/OrderResponse'
+                type: string
+                format: binary
 
 components:
   schemas:
+    ApiResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+        message:
+          type: string
+        data:
+          type: object
+
     Menu:
       type: object
       properties:
-        id:
-          type: integer
-          example: 1
         nama_produk:
           type: string
-          example: "Kopi Susu Gula Aren"
         harga:
           type: number
-          example: 18000
         stok:
           type: integer
-          example: 50
         id_kategori:
           type: integer
-          example: 1
     
     OrderRequest:
       type: object
-      required:
-        - nama_pelanggan
-        - items
       properties:
         nama_pelanggan:
           type: string
-          example: "Budi Santoso"
         items:
           type: array
           items:
@@ -109,22 +226,5 @@ components:
             properties:
               menu_id:
                 type: integer
-                example: 1
               qty:
                 type: integer
-                example: 2
-
-    OrderResponse:
-      type: object
-      properties:
-        id:
-          type: integer
-        nama_pelanggan:
-          type: string
-        total:
-          type: number
-        status:
-          type: string
-        created_at:
-          type: string
-          format: date-time
