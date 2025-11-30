@@ -1,70 +1,57 @@
 <?php
-
 namespace App\Models;
 
+use App\Core\Model; // Pastikan extend Model
 use App\Enums\OrderStatus;
 use App\Enums\PaymentMethod;
 
-class Order
+class Order extends Model
 {
+    // Properti publik agar mudah diakses Repository
     public ?int $id = null;
-    public ?int $customer_id = null;
-    public array $items = [];
+    public string $namaPelanggan = 'Guest'; // Sesuai DB
     public float $total = 0;
+    public string $status = 'pending'; // Simpan string saja biar gampang masuk DB
+    public array $items = [];
 
-    public OrderStatus $status;
-    public PaymentMethod $payment_method;
-
-    private array $errors = [];
-
-    public function __construct(array $data)
+    public function __construct(array $data = [])
     {
-        $this->customer_id = $data['customer_id'] ?? null;
+        // Mapping dari payload JSON ke properti
+        $this->namaPelanggan = $data['customer_name'] ?? $data['nama_pelanggan'] ?? 'Guest';
+        
+        // Handle Status (jika dikirim sebagai Enum atau String)
+        if (isset($data['status'])) {
+            $this->status = $data['status'] instanceof OrderStatus 
+                ? $data['status']->value 
+                : (string)$data['status'];
+        }
 
-        // Set default enum jika belum ada
-        $this->status = isset($data['status']) && $data['status'] instanceof OrderStatus
-            ? $data['status']
-            : OrderStatus::PENDING;
-
-        $this->payment_method = isset($data['payment_method']) && $data['payment_method'] instanceof PaymentMethod
-            ? $data['payment_method']
-            : PaymentMethod::CASH;
+        $this->items = $data['items'] ?? [];
+        $this->total = $data['total'] ?? 0;
     }
 
     public function validate(): bool
     {
-        $this->errors = [];
-
-        if (!$this->customer_id || !is_numeric($this->customer_id)) {
-            $this->errors['customer_id'] = "Customer ID is required and must be numeric";
-        }
-
-        // Validasi Enum
-        if (!($this->status instanceof OrderStatus)) {
-            $this->errors['status'] = "Invalid order status";
-        }
-
-        if (!($this->payment_method instanceof PaymentMethod)) {
-            $this->errors['payment_method'] = "Invalid payment method";
-        }
-
-        return empty($this->errors);
+        // Validasi sederhana
+        if (empty($this->items)) return false;
+        return true;
     }
 
-    public function getErrors(): array
-    {
-        return $this->errors;
-    }
-
-    public function toArray(): array
-    {
+    // Wajib ada karena extend Model
+    protected static function tableName(): string { return 'orders'; }
+    public function toArray(): array {
         return [
             'id' => $this->id,
-            'customer_id' => $this->customer_id,
-            'items' => $this->items,
+            'nama_pelanggan' => $this->namaPelanggan,
             'total' => $this->total,
-            'status' => $this->status->value,
-            'payment_method' => $this->payment_method->value
+            'status' => $this->status,
+            'items' => $this->items,
+            'created_at' => $this->getCreatedAt()
         ];
     }
+    
+    // Placeholder untuk satisfy abstract class
+    protected function insert(): bool { return false; } 
+    protected function update(): bool { return false; }
+    public function delete(): bool { return false; }
 }

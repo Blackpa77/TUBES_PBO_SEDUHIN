@@ -8,7 +8,6 @@ class Menu extends Model
 {
     use Validatable;
 
-    // Mapping properti sesuai kolom database 'produk'
     private string $namaProduk;
     private int $idKategori;
     private float $harga;
@@ -16,28 +15,54 @@ class Menu extends Model
     private int $stok;
     private ?string $fotoProduk;
 
-    public function __construct(array $data = [])
-    {
-        if ($data) $this->fill($data);
+    public function __construct(
+        string $namaProduk = '', 
+        float $harga = 0, 
+        int $stok = 0, 
+        int $idKategori = 1,
+        string $deskripsi = '',
+        ?string $fotoProduk = null
+    ) {
+        $this->namaProduk = $namaProduk;
+        $this->harga = $harga;
+        $this->stok = $stok;
+        $this->idKategori = $idKategori;
+        $this->deskripsi = $deskripsi;
+        $this->fotoProduk = $fotoProduk;
     }
 
-    private function fill(array $d): void
-    {
-        // Mapping dari snake_case (DB) ke camelCase (PHP)
-        $this->namaProduk = $d['nama_produk'] ?? '';
-        $this->idKategori = (int)($d['id_kategori'] ?? 0);
-        $this->harga = (float)($d['harga'] ?? 0.0);
-        $this->deskripsi = $d['deskripsi'] ?? '';
-        $this->stok = (int)($d['stok'] ?? 0);
-        $this->fotoProduk = $d['foto_produk'] ?? null;
+    // --- GETTERS (VERSI INDONESIA & INGGRIS) ---
+    // Agar service yang minta bahasa manapun tetap jalan
+    
+    public function getStok(): int { return $this->stok; }   // Indo
+    public function getStock(): int { return $this->stok; }  // Inggris
+
+    public function getHarga(): float { return $this->harga; } // Indo
+    public function getPrice(): float { return $this->harga; } // Inggris
+
+    public function getNamaProduk(): string { return $this->namaProduk; } // Indo
+    public function getName(): string { return $this->namaProduk; }       // Inggris
+
+    public function getIdKategori(): int { return $this->idKategori; }
+    public function getDeskripsi(): string { return $this->deskripsi; }
+    public function getFotoProduk(): ?string { return $this->fotoProduk; }
+
+    // --- LOGIC BISNIS ---
+    public function reduceStock(int $qty = 1): void 
+    { 
+        $this->stok -= $qty;
+        if($this->stok < 0) $this->stok = 0; 
     }
 
+    // --- VALIDASI ---
     public function validate(): bool
     {
         $this->clearErrors();
         $this->validateRequired('nama_produk', $this->namaProduk, 'Nama Produk');
+        
         if ($this->harga <= 0) $this->addError('harga', 'Harga harus > 0');
         if ($this->stok < 0) $this->addError('stok', 'Stok tidak boleh minus');
+        
         return !$this->hasErrors();
     }
 
@@ -52,49 +77,12 @@ class Menu extends Model
             'stok' => $this->stok,
             'foto_produk' => $this->fotoProduk,
             'created_at' => $this->getCreatedAt(),
+            'updated_at' => $this->getUpdatedAt(),
         ];
     }
 
-    // PENTING: Arahkan ke tabel yang benar
     protected static function tableName(): string { return 'produk'; }
-
-    protected function insert(): bool
-    {
-        $db = \App\Core\Database::getInstance()->getConnection();
-        $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
-        $stmt = $db->prepare($sql);
-        $res = $stmt->execute([
-            $this->namaProduk, $this->idKategori, $this->harga, 
-            $this->deskripsi, $this->stok, $this->fotoProduk, 
-            $this->createdAt->format('Y-m-d H:i:s')
-        ]);
-        if ($res) $this->id = (int)$db->lastInsertId();
-        return $res;
-    }
-
-    protected function update(): bool
-    {
-        $db = \App\Core\Database::getInstance()->getConnection();
-        $sql = "UPDATE produk SET nama_produk=?, id_kategori=?, harga=?, deskripsi=?, stok=?, foto_produk=?, updated_at=? WHERE id=?";
-        $stmt = $db->prepare($sql);
-        return $stmt->execute([
-            $this->namaProduk, $this->idKategori, $this->harga, 
-            $this->deskripsi, $this->stok, $this->fotoProduk, 
-            $this->updatedAt->format('Y-m-d H:i:s'), $this->id
-        ]);
-    }
-
-    public function delete(): bool
-    {
-        $db = \App\Core\Database::getInstance()->getConnection();
-        $stmt = $db->prepare("DELETE FROM produk WHERE id = ?");
-        return $stmt->execute([$this->id]);
-    }
-
-    // Getters & Setters untuk Logic
-    public function getPrice(): float { return $this->harga; }
-    public function getStock(): int { return $this->stok; }
-    public function reduceStock(int $qty = 1): void { $this->stok -= $qty; }
-    // Setter opsional jika dibutuhkan Controller
-    public function setIdKategori(int $id) { $this->idKategori = $id; }
+    protected function insert(): bool { return false; }
+    protected function update(): bool { return false; }
+    public function delete(): bool { return false; }
 }

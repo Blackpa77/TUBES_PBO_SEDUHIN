@@ -3,10 +3,6 @@ namespace App\Traits;
 
 use DateTime;
 
-/**
- * Trait untuk menambahkan timestamp otomatis
- * Traits memungkinkan reuse kode tanpa inheritance
- */
 trait Timestampable
 {
     protected ?DateTime $createdAt = null;
@@ -19,6 +15,26 @@ trait Timestampable
         $this->updatedAt = $now;
     }
 
-    public function getCreatedAt(): ?string { return $this->createdAt?->format('Y-m-d H:i:s'); }
-    public function getUpdatedAt(): ?string { return $this->updatedAt?->format('Y-m-d H:i:s'); }
+    // --- PERBAIKAN: Tambahkan Setter ini ---
+    public function setCreatedAt(DateTime $date): void 
+    { 
+        $this->createdAt = $date; 
+    }
+
+    public function setUpdatedAt(DateTime $date): void 
+    { 
+        $this->updatedAt = $date; 
+    }
+    // ----------------------------------------
+
+    // Getter tetap sama, tapi pastikan return type aman
+    public function getCreatedAt(): ?string 
+    { 
+        return $this->createdAt?->format('Y-m-d H:i:s'); 
+    }
+
+    public function getUpdatedAt(): ?string 
+    { 
+        return $this->updatedAt?->format('Y-m-d H:i:s'); 
+    }
 }

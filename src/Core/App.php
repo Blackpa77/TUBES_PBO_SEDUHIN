@@ -19,17 +19,19 @@ class App
         return is_callable($concrete) ? $concrete() : $concrete;
     }
 
-    // A very small service resolver for controllers
     public static function resolve(string $class)
     {
         $ref = new \ReflectionClass($class);
         $ctor = $ref->getConstructor();
         if (!$ctor) return new $class();
+        
         $params = $ctor->getParameters();
         $args = [];
+        
         foreach ($params as $p) {
             $type = $p->getType();
             if ($type && !$type->isBuiltin()) {
+                // Rekursif: Cari dependency di container
                 $args[] = static::get($type->getName());
             } else {
                 $args[] = null;

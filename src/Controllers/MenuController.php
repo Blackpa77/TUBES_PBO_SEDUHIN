@@ -5,20 +5,32 @@ use App\Core\Controller;
 use App\Services\MenuService;
 use App\Builders\ApiResponseBuilder;
 
+// Pastikan extend Controller
 class MenuController extends Controller
 {
-    public function __construct(private MenuService $service) {}
+    private MenuService $service;
 
+    public function __construct(MenuService $service) 
+    { 
+        $this->service = $service; 
+    }
+
+    // --- METHOD INDEX (Ini yang dicari error tadi) ---
     public function index(): void
     {
-        $data = $this->service->list($_GET);
-        $this->send($data);
+        try {
+            $data = $this->service->list($_GET);
+            $this->send($data);
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 500)->send();
+        }
     }
 
     public function show(int $id): void
     {
         try {
-            $this->send($this->service->get($id));
+            $data = $this->service->get($id);
+            $this->send($data);
         } catch (\Exception $e) {
             ApiResponseBuilder::error($e->getMessage(), 404)->send();
         }
