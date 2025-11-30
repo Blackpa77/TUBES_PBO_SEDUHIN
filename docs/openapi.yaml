@@ -1,36 +1,130 @@
-openapi: 3.0.0
+openapi: 3.0.3
 info:
-  title: Seduhin API
-  description: API Backend untuk Sistem Kasir Kafe Seduhin
+  title: Seduhin REST API
+  description: Dokumentasi API untuk Sistem Kasir Kafe Seduhin (Tugas Besar PBO)
   version: 1.0.0
+  contact:
+    name: Tim Pengembang
+    email: tim@seduhin.com
 servers:
   - url: http://tubes_pbo_seduhin.test
+    description: Server Lokal (Laragon)
 paths:
   /public/menus:
     get:
-      summary: Ambil semua menu
+      summary: Mendapatkan daftar semua menu
+      description: Mengembalikan daftar produk kopi dan snack yang tersedia.
       responses:
         '200':
-          description: Sukses
+          description: Berhasil mengambil data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Menu'
+  
   /public/orders:
+    get:
+      summary: Mendapatkan daftar riwayat pesanan
+      responses:
+        '200':
+          description: Berhasil mengambil data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/OrderResponse'
     post:
-      summary: Buat pesanan baru
+      summary: Membuat pesanan baru (Checkout)
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              type: object
-              properties:
-                nama_pelanggan:
-                  type: string
-                items:
-                  type: array
+              $ref: '#/components/schemas/OrderRequest'
       responses:
         '201':
-          description: Created
-    get:
-      summary: Lihat semua pesanan
-      responses:
-        '200':
-          description: Sukses
+          description: Pesanan berhasil dibuat
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Order placed"
+                  data:
+                    $ref: '#/components/schemas/OrderResponse'
+
+components:
+  schemas:
+    Menu:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        nama_produk:
+          type: string
+          example: "Kopi Susu Gula Aren"
+        harga:
+          type: number
+          example: 18000
+        stok:
+          type: integer
+          example: 50
+        id_kategori:
+          type: integer
+          example: 1
+    
+    OrderRequest:
+      type: object
+      required:
+        - nama_pelanggan
+        - items
+      properties:
+        nama_pelanggan:
+          type: string
+          example: "Budi Santoso"
+        items:
+          type: array
+          items:
+            type: object
+            properties:
+              menu_id:
+                type: integer
+                example: 1
+              qty:
+                type: integer
+                example: 2
+
+    OrderResponse:
+      type: object
+      properties:
+        id:
+          type: integer
+        nama_pelanggan:
+          type: string
+        total:
+          type: number
+        status:
+          type: string
+        created_at:
+          type: string
+          format: date-time
