@@ -1,10 +1,19 @@
 openapi: 3.0.3
 info:
   title: Seduhin REST API
-  description: Dokumentasi Lengkap Sistem Kasir Kafe Seduhin. Mencakup Auth, Manajemen Menu, dan Transaksi.
-  version: 1.0.0
+  description: |
+    Dokumentasi Lengkap Sistem Kasir Kafe Seduhin (Tugas Besar PBO).
+    Mencakup fitur Autentikasi, Manajemen Menu, dan Transaksi Order.
+
+    **Disusun Oleh Kelompok:**
+    1. Adhelia Issabel (H1101241001)
+    2. Arjun Paundra Maheswara (H1101241029)
+    3. Nadya Aulia Tiarani (H1101241030)
+    4. Florecita Wenny (H1101241039)
+    5. Aurellya Yocelyn Prasista (H1101241043)
+  version: 1.1.0
   contact:
-    name: Tim Pengembang
+    name: Tim Seduhin (Adhelia, Arjun, Nadya, Florecita, Aurellya)
     email: admin@seduhin.com
 servers:
   - url: http://tubes_pbo_seduhin.test
@@ -12,17 +21,21 @@ servers:
 
 paths:
   # --- AUTHENTICATION ---
-  /auth/login:
+  /public/auth/login:
     post:
       tags:
         - Auth
       summary: Login Admin/Kasir
+      description: Endpoint untuk mendapatkan akses masuk.
       requestBody:
         required: true
         content:
           application/json:
             schema:
               type: object
+              required:
+                - email
+                - password
               properties:
                 email:
                   type: string
@@ -46,13 +59,15 @@ paths:
                     properties:
                       token:
                         type: string
+                        description: Token sesi (Simulasi)
 
-  # --- MENUS ---
+  # --- MENUS (CRUD) ---
   /public/menus:
     get:
       tags:
         - Menus
       summary: Lihat Daftar Menu
+      description: Mengambil semua data produk yang tersedia untuk ditampilkan di kasir.
       responses:
         '200':
           description: Sukses
@@ -108,12 +123,13 @@ paths:
         '200':
           description: Menu berhasil dihapus
 
-  # --- ORDERS ---
+  # --- ORDERS (TRANSAKSI) ---
   /public/orders:
     get:
       tags:
         - Orders
       summary: Riwayat Transaksi
+      description: Melihat semua daftar pesanan yang pernah masuk.
       responses:
         '200':
           description: Berhasil
@@ -125,6 +141,7 @@ paths:
       tags:
         - Orders
       summary: Buat Pesanan (Checkout)
+      description: Mencatat transaksi baru, mengurangi stok otomatis, dan memicu trigger log.
       requestBody:
         required: true
         content:
@@ -189,7 +206,8 @@ paths:
     get:
       tags:
         - Orders
-      summary: Download Struk (PDF/Print)
+      summary: Cetak Struk (PDF)
+      description: Menghasilkan tampilan HTML struk yang siap dicetak.
       parameters:
         - name: id
           in: path
@@ -206,7 +224,7 @@ paths:
 
 components:
   schemas:
-    # Format Response Standar
+    # Format Response Umum
     ApiResponseList:
       type: object
       properties:
@@ -217,9 +235,13 @@ components:
           items:
             type: object
 
-    # Schema Input Menu (Sesuai Kolom DB: nama_produk, harga)
+    # Schema Input Menu (Sesuai Kolom DB)
     MenuInput:
       type: object
+      required:
+        - nama_produk
+        - harga
+        - stok
       properties:
         nama_produk:
           type: string
@@ -251,6 +273,9 @@ components:
           type: array
           items:
             type: object
+            required:
+              - menu_id
+              - qty
             properties:
               menu_id:
                 type: integer
