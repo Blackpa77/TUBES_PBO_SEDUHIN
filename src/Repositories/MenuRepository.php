@@ -15,32 +15,33 @@ class MenuRepository implements MenuRepositoryInterface
         $this->db = $database->getConnection();
     }
 
-    public function find(int $id): ?Menu
+    // --- UBAH NAMA METHOD INI JADI findById ---
+    public function findById(int $id): ?Menu
     {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = ?");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
         if (!$row) return null;
+
         return $this->hydrate($row);
     }
+    // -------------------------------------------
 
-    // --- METHOD BARU: AMBIL SEMUA DATA ---
     public function findAll(array $filters = []): array
     {
         $sql = "SELECT * FROM produk WHERE 1=1";
         $params = [];
         
-        // Filter opsional
-        if (!empty($filters['category'])) {
-            $sql .= " AND id_kategori = ?";
-            $params[] = $filters['category'];
+        if (!empty($filters['category'])) { 
+            $sql .= " AND id_kategori = ?"; 
+            $params[] = $filters['category']; 
         }
-
         $sql .= " ORDER BY created_at DESC";
+        
         $stmt = $this->db->prepare($sql);
         $stmt->execute($params);
-
+        
         $results = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
             $results[] = $this->hydrate($row);
@@ -60,12 +61,13 @@ class MenuRepository implements MenuRepositoryInterface
     private function insert(Menu $menu): bool
     {
         $menu->setCreatedAt(new DateTime());
+        // Default id_kategori 1 jika kosong
         $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, 1, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
         $res = $stmt->execute([
             $menu->getNamaProduk(),
             $menu->getHarga(),
-            'Deskripsi default', // Sementara default
+            'Deskripsi default', 
             $menu->getStok(),
             null,
             $menu->getCreatedAt()
