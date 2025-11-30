@@ -1,0 +1,34 @@
+<?php
+namespace App\Services;
+
+use App\Repositories\AdminRepository;
+use App\Exceptions\ValidationException;
+
+class AdminAuthService
+{
+    private AdminRepository $repo;
+
+    public function __construct(AdminRepository $repo)
+    {
+        $this->repo = $repo;
+    }
+
+    public function login(string $email, string $password): array
+    {
+        $admin = $this->repo->findByEmail($email);
+
+        // Cek user ada dan password cocok (disini kita pakai plain text sesuai db kamu yg lama, 
+        // idealnya pakai password_verify jika sudah di-hash)
+        if (!$admin || $admin->password !== $password) {
+            throw new ValidationException("Email atau Password salah!");
+        }
+
+        // Return data admin (tanpa password)
+        return [
+            'id' => $admin->id,
+            'nama' => $admin->nama,
+            'email' => $admin->email,
+            'token' => base64_encode("TOKEN_RAHASIA_" . $admin->id) // Simulasi Token
+        ];
+    }
+}

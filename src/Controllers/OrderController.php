@@ -27,7 +27,7 @@ class OrderController extends Controller
             $order = $this->service->createOrder($payload);
             ApiResponseBuilder::created($order, 'Order placed')->send();
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
@@ -37,30 +37,63 @@ class OrderController extends Controller
             $o = $this->service->getOrder($id);
             $this->send($o);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 404)->send();
+            ApiResponseBuilder::error($e->getMessage(), 404)->send();
         }
     }
 
-    // --- METHOD BARU: UPDATE ---
     public function update(int $id): void
     {
         try {
             $payload = $this->getJson();
             $order = $this->service->updateOrder($id, $payload);
-            $this->send($order, 200);
+            $this->send($order);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
         }
     }
 
-    // --- METHOD BARU: DESTROY ---
     public function destroy(int $id): void
     {
         try {
             $this->service->deleteOrder($id);
             $this->send(['message' => 'Order deleted successfully']);
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), $e->getCode() ?: 400)->send();
+            ApiResponseBuilder::error($e->getMessage(), 400)->send();
+        }
+    }
+
+    // --- FITUR BARU: DOWNLOAD STRUK ---
+    public function download(int $id): void
+    {
+        try {
+            $order = $this->service->getOrder($id);
+            
+            // Format Struk Sederhana (Text)
+            $struk = "=== STRUK BELANJA SEDUHIN ===\n";
+            $struk .= "ID Order: #" . $order['id'] . "\n";
+            $struk .= "Tanggal : " . $order['created_at'] . "\n";
+            $struk .= "Pelanggan: " . $order['nama_pelanggan'] . "\n";
+            $struk .= "-----------------------------\n";
+            
+            foreach ($order['items'] as $item) {
+                $subtotal = $item->qty * $item->price;
+                $struk .= "- ID Produk: " . $item->menuId . " x " . $item->qty . " = Rp " . number_format($subtotal) . "\n";
+            }
+            
+            $struk .= "-----------------------------\n";
+            $struk .= "TOTAL   : Rp " . number_format($order['total']) . "\n";
+            $struk .= "STATUS  : " . strtoupper($order['status']) . "\n";
+            $struk .= "=============================\n";
+            $struk .= "Terima Kasih!";
+
+            // Kirim sebagai file download
+            header('Content-Type: text/plain');
+            header('Content-Disposition: attachment; filename="struk_order_'.$id.'.txt"');
+            echo $struk;
+            exit;
+
+        } catch (\Exception $e) {
+            ApiResponseBuilder::error($e->getMessage(), 404)->send();
         }
     }
 }
