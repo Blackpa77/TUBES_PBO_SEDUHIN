@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <title>Demo UI Seduhin API</title>
+    <style>
+        body { font-family: sans-serif; margin: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <h1>Daftar Menu Seduhin ☕</h1>
+    <table id="menuTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Nama Produk</th>
+                <th>Harga</th>
+                <th>Stok</th>
+                <th>Kategori</th>
+            </tr>
+        </thead>
+        <tbody>
+            </tbody>
+    </table>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const tableBody = document.querySelector('#menuTable tbody');
+            const apiUrl = 'http://localhost/api/menus'; // Ganti dengan URL API Anda
+
+            fetch(apiUrl)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(result => {
+                    if (result.success && result.data.data) {
+                        result.data.data.forEach(menu => {
+                            const row = tableBody.insertRow();
+                            row.insertCell().textContent = menu.id;
+                            row.insertCell().textContent = menu.nama_produk;
+                            row.insertCell().textContent = menu.harga;
+                            row.insertCell().textContent = menu.stok;
+                            row.insertCell().textContent = menu.id_kategori; // Asumsi Anda mapping ID Kategori ke nama
+                        });
+                    } else {
+                        tableBody.innerHTML = '<tr><td colspan="5">Gagal memuat data menu.</td></tr>';
+                    }
+                })
+                .catch(e => {
+                    console.error('Fetch error:', e);
+                    tableBody.innerHTML = `<tr><td colspan="5">Error koneksi: ${e.message}</td></tr>`;
+                });
+        });
+    </script>
+</body>
+</html>
