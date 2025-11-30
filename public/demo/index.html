@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Seduhin POS System</title>
     <style>
-        :root { --primary: #6c5ce7; --dark: #2d3436; --light: #f5f6fa; --danger: #e74c3c; --success: #00b894; }
+        :root { --primary: #6c5ce7; --dark: #2d3436; --light: #f5f6fa; --danger: #e74c3c; --success: #00b894; --warning: #f1c40f; }
         body { font-family: 'Segoe UI', sans-serif; margin: 0; background: var(--light); color: var(--dark); }
         
         /* Layout */
@@ -14,10 +14,11 @@
         .content { flex-grow: 1; padding: 30px; overflow-y: auto; }
         
         /* Components */
-        .btn { padding: 10px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; }
+        .btn { padding: 8px 15px; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; transition: 0.2s; font-size: 0.9rem; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-success { background: var(--success); color: white; }
+        .btn-warning { background: var(--warning); color: #333; }
         .btn:hover { opacity: 0.9; transform: translateY(-2px); }
         
         /* Login Screen */
@@ -29,12 +30,8 @@
         .menu-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
         .card { background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); transition: 0.2s; display: flex; flex-direction: column; }
         .card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        
-        /* PERBAIKAN GAMBAR DI KASIR */
         .card-img { height: 160px; width: 100%; overflow: hidden; background: #eee; }
         .card-img img { width: 100%; height: 100%; object-fit: cover; transition: 0.3s; }
-        .card:hover .card-img img { transform: scale(1.05); }
-        
         .card-body { padding: 15px; flex-grow: 1; display: flex; flex-direction: column; }
         .card h4 { margin: 0 0 5px 0; font-size: 1.1rem; color: #2d3436; }
         .price { color: var(--primary); font-weight: bold; font-size: 1.1rem; margin-bottom: 5px; }
@@ -48,14 +45,22 @@
         .bg-pending { background: #f1c40f; color: #333; }
         .bg-paid { background: var(--success); }
         .bg-cancel { background: var(--danger); }
-        
-        /* PERBAIKAN GAMBAR DI TABEL */
-        .thumb-img { width: 60px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
+        .thumb-img { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; border: 1px solid #eee; }
 
         /* Navigation */
         .nav-link { display: block; padding: 12px; margin: 5px 0; color: #636e72; text-decoration: none; border-radius: 6px; font-weight: 500; }
         .nav-link:hover, .nav-link.active { background: #eef2ff; color: var(--primary); font-weight: 700; }
         .hidden { display: none !important; }
+
+        /* MODAL FORM */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-box { background: white; padding: 30px; border-radius: 12px; width: 400px; box-shadow: 0 10px 30px rgba(0,0,0,0.2); }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+        .modal-header h3 { margin: 0; }
+        .close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: #999; }
+        .form-group { margin-bottom: 15px; }
+        .form-group label { display: block; margin-bottom: 5px; font-weight: 600; font-size: 0.9rem; }
+        .form-group input, .form-group textarea { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 6px; box-sizing: border-box; font-family: inherit; }
     </style>
 </head>
 <body>
@@ -88,30 +93,23 @@
                 <div style="display:grid; grid-template-columns: 3fr 1.2fr; gap: 25px;">
                     <div>
                         <h2 style="margin-top:0">Daftar Menu</h2>
-                        <div id="menu-grid" class="menu-grid">
-                            <div style="text-align:center; padding:20px;">Loading data...</div>
-                        </div>
+                        <div id="menu-grid" class="menu-grid">Loading data...</div>
                     </div>
-                    
                     <div style="background:white; padding:25px; border-radius:12px; height:fit-content; box-shadow: 0 4px 15px rgba(0,0,0,0.05); position:sticky; top:20px;">
                         <h3 style="margin-top:0; border-bottom:1px solid #eee; padding-bottom:15px;">🛒 Keranjang</h3>
-                        
                         <div style="margin-bottom:15px;">
                             <label style="font-size:0.9rem; font-weight:600; display:block; margin-bottom:5px;">Nama Pelanggan</label>
                             <input type="text" id="custName" placeholder="Masukkan nama..." style="width:100%; padding:10px; border:1px solid #ddd; border-radius:6px;">
                         </div>
-
                         <div id="cart-items" style="margin-bottom:20px; max-height:350px; overflow-y:auto; min-height:100px;">
                             <p style="color:#999; text-align:center; margin-top:30px;">Keranjang masih kosong</p>
                         </div>
-
                         <div style="border-top:2px solid #333; padding-top:15px; margin-bottom:20px;">
                             <div style="display:flex; justify-content:space-between; font-weight:bold; font-size:1.3rem; color:#2d3436;">
                                 <span>Total</span>
                                 <span id="cart-total">Rp 0</span>
                             </div>
                         </div>
-                        
                         <button onclick="checkout()" class="btn btn-success" style="width:100%; padding:12px; font-size:1rem;">BAYAR SEKARANG</button>
                     </div>
                 </div>
@@ -140,8 +138,10 @@
             </div>
 
             <div id="page-menu-mgr" class="hidden">
-                <h2 style="margin-top:0;">Manajemen Menu</h2>
-                <p style="color:#666; margin-bottom:20px;">Kelola ketersediaan produk.</p>
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:20px;">
+                    <h2 style="margin:0;">Manajemen Menu</h2>
+                    <button onclick="openModal('add')" class="btn btn-primary">+ Tambah Menu Baru</button>
+                </div>
                 <div style="overflow-x:auto;">
                     <table id="mgr-table">
                         <thead>
@@ -162,12 +162,41 @@
         </div>
     </div>
 
+    <div id="menu-modal" class="modal-overlay hidden">
+        <div class="modal-box">
+            <div class="modal-header">
+                <h3 id="modal-title">Tambah Menu</h3>
+                <button onclick="closeModal()" class="close-btn">&times;</button>
+            </div>
+            <form onsubmit="saveMenu(event)">
+                <input type="hidden" id="menuId">
+                <div class="form-group">
+                    <label>Nama Produk</label>
+                    <input type="text" id="menuName" required>
+                </div>
+                <div class="form-group">
+                    <label>Harga (Rp)</label>
+                    <input type="number" id="menuPrice" required>
+                </div>
+                <div class="form-group">
+                    <label>Stok Awal</label>
+                    <input type="number" id="menuStock" required>
+                </div>
+                <div class="form-group">
+                    <label>URL Foto (Opsional)</label>
+                    <input type="text" id="menuImg" placeholder="https://...">
+                </div>
+                <button type="submit" class="btn btn-primary" style="width:100%">SIMPAN</button>
+            </form>
+        </div>
+    </div>
+
     <script>
         const API_BASE = '/public';
         let cart = [];
         let allMenus = [];
 
-        // --- AUTH LOGIC ---
+        // --- AUTH ---
         function checkAuth() {
             if(localStorage.getItem('seduhin_token')) {
                 document.getElementById('login-screen').classList.add('hidden');
@@ -175,30 +204,24 @@
                 loadMenus();
             }
         }
-
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-
             try {
                 const res = await fetch(`${API_BASE}/auth/login`, {
                     method: 'POST',
                     body: JSON.stringify({email, password})
                 });
                 const data = await res.json();
-                
                 if(data.success) {
                     localStorage.setItem('seduhin_token', data.data.token);
                     checkAuth();
-                } else {
-                    alert("Gagal: " + data.message);
-                }
+                } else { alert("Gagal: " + data.message); }
             } catch(err) { alert("Error Login: " + err); }
         }
-
         function logout() {
-            if(confirm('Yakin ingin keluar?')) {
+            if(confirm('Yakin keluar?')) {
                 localStorage.removeItem('seduhin_token');
                 location.reload();
             }
@@ -207,195 +230,184 @@
         // --- NAVIGATION ---
         function showPage(e, pageId) {
             if(e) e.preventDefault();
-            
-            // Hide all pages
             document.querySelectorAll('.content > div').forEach(div => div.classList.add('hidden'));
-            // Show target page
             document.getElementById(`page-${pageId}`).classList.remove('hidden');
-            
-            // Update Active Link
             document.querySelectorAll('.nav-link').forEach(a => a.classList.remove('active'));
             if(e) e.target.classList.add('active');
-
-            // Load Data Specific
             if(pageId === 'history') loadOrders();
             if(pageId === 'menu-mgr') loadMenuMgr();
         }
 
-        // --- DATA: MENU ---
+        // --- KASIR ---
         async function loadMenus() {
-            try {
-                const res = await fetch(`${API_BASE}/menus`);
-                const json = await res.json();
-                allMenus = json.data;
-                renderMenuGrid();
-            } catch(err) {
-                console.error(err);
-            }
+            const res = await fetch(`${API_BASE}/menus`);
+            const json = await res.json();
+            allMenus = json.data;
+            renderMenuGrid();
         }
-
         function renderMenuGrid() {
             const container = document.getElementById('menu-grid');
-            if(allMenus.length === 0) {
-                container.innerHTML = "Data menu kosong.";
-                return;
-            }
-
-            // PERBAIKAN GAMBAR DI SINI:
-            // Kita langsung pakai URL dari database (https://...)
             container.innerHTML = allMenus.map(m => `
                 <div class="card">
                     <div class="card-img">
-                        ${m.foto_produk ? 
-                            `<img src="${m.foto_produk}" alt="${m.nama_produk}" onerror="this.src='https://placehold.co/400x300?text=No+Image'">` : 
-                            `<span style="font-size:3rem; color:#ccc;">☕</span>`}
+                        ${m.foto_produk ? `<img src="${m.foto_produk}" onerror="this.src='https://placehold.co/400'">` : `<span style="font-size:3rem">☕</span>`}
                     </div>
                     <div class="card-body">
                         <h4>${m.nama_produk}</h4>
-                        <div class="price">Rp ${parseInt(m.harga).toLocaleString('id-ID')}</div>
+                        <div class="price">Rp ${parseInt(m.harga).toLocaleString()}</div>
                         <div class="stock-badge">Stok: ${m.stok}</div>
-                        <button onclick="addToCart(${m.id})" class="btn btn-primary" style="width:100%; margin-top:auto;" ${m.stok<=0?'disabled style="background:#ccc"':''}>
-                            ${m.stok > 0 ? '+ Tambah' : 'Habis'}
+                        <button onclick="addToCart(${m.id})" class="btn btn-primary" style="width:100%; margin-top:auto;" ${m.stok<=0?'disabled':''}>
+                            ${m.stok>0?'+ Tambah':'Habis'}
                         </button>
                     </div>
                 </div>
             `).join('');
         }
-
-        // --- CART ---
         function addToCart(id) {
-            const menu = allMenus.find(m => m.id === id);
-            const exist = cart.find(c => c.id === id);
-            
-            if(exist && exist.qty >= menu.stok) return alert("Stok tidak cukup!");
-
-            if(exist) exist.qty++; 
-            else cart.push({id, name:menu.nama_produk, price:menu.harga, qty:1});
-            
+            const m = allMenus.find(x => x.id === id);
+            const c = cart.find(x => x.id === id);
+            if(c && c.qty >= m.stok) return alert("Stok habis!");
+            if(c) c.qty++; else cart.push({id, name:m.nama_produk, price:m.harga, qty:1});
             renderCart();
         }
-
         function renderCart() {
             const container = document.getElementById('cart-items');
             let total = 0;
-            if(cart.length === 0) {
-                container.innerHTML = '<p style="text-align:center;color:#999; margin-top:30px;">Keranjang kosong</p>';
-            } else {
-                container.innerHTML = cart.map((c, i) => {
-                    total += c.price * c.qty;
-                    return `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px dashed #eee; padding-bottom:10px;">
-                        <div>
-                            <div style="font-weight:600;">${c.name}</div>
-                            <small style="color:#666;">${c.qty} x Rp ${parseInt(c.price).toLocaleString()}</small>
-                        </div>
-                        <div style="text-align:right">
-                            <div style="font-weight:bold;">Rp ${(c.price*c.qty).toLocaleString()}</div>
-                            <a href="#" onclick="cart.splice(${i},1);renderCart()" style="color:var(--danger);font-size:0.8rem;text-decoration:none;">&times; Hapus</a>
-                        </div>
-                    </div>`;
-                }).join('');
+            if(cart.length===0) {
+                container.innerHTML='<p style="text-align:center;color:#999">Kosong</p>'; 
+                document.getElementById('cart-total').innerText = 'Rp 0';
+                return;
             }
-            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString('id-ID');
+            container.innerHTML = cart.map((c,i) => {
+                total += c.price*c.qty;
+                return `<div style="display:flex;justify-content:space-between;margin-bottom:10px;border-bottom:1px dashed #eee;padding-bottom:5px">
+                    <div><b>${c.name}</b><br><small>${c.qty} x ${c.price}</small></div>
+                    <div>Rp ${(c.qty*c.price).toLocaleString()} <a href="#" onclick="cart.splice(${i},1);renderCart()" style="color:red;text-decoration:none">&times;</a></div>
+                </div>`;
+            }).join('');
+            document.getElementById('cart-total').innerText = 'Rp ' + total.toLocaleString();
         }
-
         async function checkout() {
             const nama = document.getElementById('custName').value;
-            if(!nama) return alert("Mohon isi nama pelanggan!");
-            if(cart.length === 0) return alert("Keranjang kosong!");
-
-            const payload = {
-                nama_pelanggan: nama,
-                items: cart.map(c => ({menu_id: c.id, qty: c.qty}))
-            };
-
-            try {
-                const res = await fetch(`${API_BASE}/orders`, {
-                    method: 'POST',
-                    body: JSON.stringify(payload)
-                });
-                const json = await res.json();
-                
-                if(json.success) {
-                    alert("✅ Transaksi Berhasil!");
-                    cart = []; renderCart(); document.getElementById('custName').value = '';
-                    loadMenus(); // Refresh stok
-                } else {
-                    alert("Gagal: " + json.message);
-                }
-            } catch(e) { alert("Error: " + e); }
+            if(!nama || cart.length===0) return alert("Isi nama & keranjang!");
+            const res = await fetch(`${API_BASE}/orders`, {
+                method:'POST', body:JSON.stringify({nama_pelanggan:nama, items:cart.map(c=>({menu_id:c.id, qty:c.qty}))})
+            });
+            const json = await res.json();
+            if(json.success) { alert("Sukses!"); cart=[]; renderCart(); loadMenus(); }
+            else alert("Gagal: "+json.message);
         }
 
         // --- HISTORY ---
         async function loadOrders() {
             const res = await fetch(`${API_BASE}/orders`);
             const json = await res.json();
-            const tbody = document.getElementById('history-body');
-            
-            tbody.innerHTML = json.data.map(o => `
+            document.getElementById('history-body').innerHTML = json.data.map(o => `
                 <tr>
-                    <td><b>#${o.id}</b></td>
-                    <td>${o.created_at ? new Date(o.created_at).toLocaleString('id-ID') : '-'}</td>
+                    <td>#${o.id}</td>
+                    <td>${new Date(o.created_at).toLocaleString()}</td>
                     <td>${o.nama_pelanggan}</td>
-                    <td style="font-weight:bold;">Rp ${parseInt(o.total).toLocaleString()}</td>
-                    <td><span class="badge bg-${o.status}">${o.status.toUpperCase()}</span></td>
-                    <td style="text-align:center;">
-                        <button onclick="editStatus(${o.id})" class="btn btn-primary" style="padding:5px 10px; font-size:0.8rem">Edit</button>
-                        <button onclick="deleteOrder(${o.id})" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem">Hapus</button>
-                        <a href="${API_BASE}/orders/${o.id}/download" target="_blank" class="btn btn-success" style="padding:5px 10px; font-size:0.8rem; text-decoration:none;">🖨️ Struk</a>
+                    <td>Rp ${parseInt(o.total).toLocaleString()}</td>
+                    <td><span class="badge bg-${o.status}">${o.status}</span></td>
+                    <td style="text-align:center">
+                        <button onclick="editStatus(${o.id})" class="btn btn-primary">Edit</button>
+                        <button onclick="deleteOrder(${o.id})" class="btn btn-danger">Hapus</button>
+                        <a href="${API_BASE}/orders/${o.id}/download" target="_blank" class="btn btn-success" style="text-decoration:none">Struk</a>
                     </td>
                 </tr>
             `).join('');
         }
-
         async function editStatus(id) {
-            const newStatus = prompt("Update status (pending / paid / cancel):", "paid");
-            if(newStatus) {
-                await fetch(`${API_BASE}/orders/${id}`, {
-                    method: 'PUT',
-                    body: JSON.stringify({status: newStatus})
-                });
-                loadOrders();
-            }
+            const s = prompt("Status baru (paid/pending/cancel):", "paid");
+            if(s) { await fetch(`${API_BASE}/orders/${id}`, { method:'PUT', body:JSON.stringify({status:s})}); loadOrders(); }
         }
-
         async function deleteOrder(id) {
-            if(confirm("Hapus riwayat ini? Data tidak bisa kembali.")) {
-                await fetch(`${API_BASE}/orders/${id}`, { method: 'DELETE' });
-                loadOrders();
-            }
+            if(confirm("Hapus?")) { await fetch(`${API_BASE}/orders/${id}`, { method:'DELETE' }); loadOrders(); }
         }
 
-        // --- MENU MANAGER ---
+        // --- MENU MANAGER (CRUD) ---
         async function loadMenuMgr() {
-            const tbody = document.getElementById('mgr-body');
+            // Refresh data menu dulu
+            const res = await fetch(`${API_BASE}/menus`);
+            const json = await res.json();
+            allMenus = json.data;
             
-            // PERBAIKAN GAMBAR DI SINI JUGA
-            tbody.innerHTML = allMenus.map(m => `
+            document.getElementById('mgr-body').innerHTML = allMenus.map(m => `
                 <tr>
                     <td>${m.id}</td>
-                    <td>
-                        ${m.foto_produk ? 
-                        `<img src="${m.foto_produk}" class="thumb-img" onerror="this.src='https://placehold.co/60'">` : 
-                        '-'}
-                    </td>
-                    <td><b>${m.nama_produk}</b></td>
+                    <td>${m.foto_produk ? `<img src="${m.foto_produk}" class="thumb-img">` : '-'}</td>
+                    <td>${m.nama_produk}</td>
                     <td>Rp ${parseInt(m.harga).toLocaleString()}</td>
                     <td>${m.stok}</td>
-                    <td style="text-align:center;">
-                        <button onclick="deleteMenu(${m.id})" class="btn btn-danger" style="padding:5px 10px; font-size:0.8rem">Hapus</button>
+                    <td style="text-align:center">
+                        <button onclick="openModal('edit', ${m.id})" class="btn btn-warning">Edit</button>
+                        <button onclick="deleteMenu(${m.id})" class="btn btn-danger">Hapus</button>
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // Modal Logic
+        let editMode = false;
+        function openModal(mode, id = null) {
+            document.getElementById('menu-modal').classList.remove('hidden');
+            editMode = (mode === 'edit');
+            document.getElementById('modal-title').innerText = editMode ? "Edit Menu" : "Tambah Menu Baru";
+            
+            if(editMode && id) {
+                const m = allMenus.find(x => x.id === id);
+                document.getElementById('menuId').value = m.id;
+                document.getElementById('menuName').value = m.nama_produk;
+                document.getElementById('menuPrice').value = m.harga;
+                document.getElementById('menuStock').value = m.stok;
+                document.getElementById('menuImg').value = m.foto_produk || '';
+            } else {
+                document.getElementById('menuId').value = '';
+                document.querySelector('form').reset();
+            }
+        }
+
+        function closeModal() {
+            document.getElementById('menu-modal').classList.add('hidden');
+        }
+
+        async function saveMenu(e) {
+            e.preventDefault();
+            const id = document.getElementById('menuId').value;
+            const payload = {
+                nama_produk: document.getElementById('menuName').value,
+                harga: document.getElementById('menuPrice').value,
+                stok: document.getElementById('menuStock').value,
+                foto_produk: document.getElementById('menuImg').value, // Belum disimpan di backend sebelumnya, tapi dikirim saja
+                id_kategori: 1 // Default
+            };
+
+            const url = editMode ? `${API_BASE}/menus/${id}` : `${API_BASE}/menus`;
+            const method = editMode ? 'PUT' : 'POST';
+
+            try {
+                const res = await fetch(url, {
+                    method: method,
+                    body: JSON.stringify(payload)
+                });
+                const json = await res.json();
+                if(res.ok) {
+                    alert("Berhasil disimpan!");
+                    closeModal();
+                    loadMenuMgr(); // Refresh tabel
+                } else {
+                    alert("Gagal: " + json.message);
+                }
+            } catch(err) { alert("Error: " + err); }
         }
 
         async function deleteMenu(id) {
-            if(confirm("Hapus menu ini permanen?")) {
-                await fetch(`${API_BASE}/menus/${id}`, { method: 'DELETE' });
-                loadMenus(); loadMenuMgr();
+            if(confirm("Hapus permanen?")) {
+                await fetch(`${API_BASE}/menus/${id}`, { method:'DELETE' });
+                loadMenuMgr();
             }
         }
 
-        // Start
         checkAuth();
     </script>
 </body>
