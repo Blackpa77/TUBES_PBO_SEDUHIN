@@ -62,9 +62,11 @@ class MenuController extends Controller
     {
         try {
             $this->service->delete($id);
-            $this->send(['deleted' => true]);
+            // Pesan yang benar untuk menu
+            $this->send(['message' => 'Menu deleted successfully']); 
         } catch (\Exception $e) {
-            ApiResponseBuilder::error($e->getMessage(), 400)->send();
+            // Tangkap error database (misal: masih ada order)
+            ApiResponseBuilder::error("Gagal menghapus: Menu ini masih ada di riwayat transaksi.", 400)->send();
         }
     }
 }
