@@ -1,7 +1,7 @@
 openapi: 3.0.3
 info:
   title: Seduhin REST API
-  description: Dokumentasi Lengkap Sistem Kasir Kafe Seduhin (Tugas Besar PBO). Mencakup fitur Autentikasi, Manajemen Menu, dan Transaksi.
+  description: Dokumentasi Lengkap Sistem Kasir Kafe Seduhin. Mencakup Auth, Manajemen Menu, dan Transaksi.
   version: 1.0.0
   contact:
     name: Tim Pengembang
@@ -17,7 +17,6 @@ paths:
       tags:
         - Auth
       summary: Login Admin/Kasir
-      description: Masuk untuk mendapatkan akses ke sistem.
       requestBody:
         required: true
         content:
@@ -54,14 +53,13 @@ paths:
       tags:
         - Menus
       summary: Lihat Daftar Menu
-      description: Mengambil semua data menu yang tersedia.
       responses:
         '200':
-          description: Berhasil mengambil data
+          description: Sukses
           content:
             application/json:
               schema:
-                $ref: '#/components/schemas/ApiResponse'
+                $ref: '#/components/schemas/ApiResponseList'
     post:
       tags:
         - Menus
@@ -71,12 +69,31 @@ paths:
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Menu'
+              $ref: '#/components/schemas/MenuInput'
       responses:
         '201':
           description: Menu berhasil dibuat
 
   /public/menus/{id}:
+    put:
+      tags:
+        - Menus
+      summary: Update Menu
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MenuInput'
+      responses:
+        '200':
+          description: Menu berhasil diupdate
     delete:
       tags:
         - Menus
@@ -90,8 +107,6 @@ paths:
       responses:
         '200':
           description: Menu berhasil dihapus
-        '404':
-          description: Menu tidak ditemukan
 
   # --- ORDERS ---
   /public/orders:
@@ -99,15 +114,17 @@ paths:
       tags:
         - Orders
       summary: Riwayat Transaksi
-      description: Melihat semua daftar pesanan yang pernah masuk.
       responses:
         '200':
           description: Berhasil
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiResponseList'
     post:
       tags:
         - Orders
       summary: Buat Pesanan (Checkout)
-      description: Mencatat transaksi baru dan mengurangi stok otomatis.
       requestBody:
         required: true
         content:
@@ -136,7 +153,6 @@ paths:
       tags:
         - Orders
       summary: Update Status Pesanan
-      description: Mengubah status pembayaran (pending -> paid).
       parameters:
         - name: id
           in: path
@@ -173,8 +189,7 @@ paths:
     get:
       tags:
         - Orders
-      summary: Download Struk Transaksi
-      description: Mengunduh detail pesanan dalam format Struk HTML/PDF.
+      summary: Download Struk (PDF/Print)
       parameters:
         - name: id
           in: path
@@ -183,42 +198,55 @@ paths:
             type: integer
       responses:
         '200':
-          description: File Struk terunduh
+          description: File Struk HTML
           content:
             text/html:
               schema:
                 type: string
-                format: binary
 
 components:
   schemas:
-    ApiResponse:
+    # Format Response Standar
+    ApiResponseList:
       type: object
       properties:
         success:
           type: boolean
-        message:
-          type: string
         data:
-          type: object
+          type: array
+          items:
+            type: object
 
-    Menu:
+    # Schema Input Menu (Sesuai Kolom DB: nama_produk, harga)
+    MenuInput:
       type: object
       properties:
         nama_produk:
           type: string
+          example: "Kopi Tubruk"
         harga:
           type: number
+          example: 15000
         stok:
           type: integer
+          example: 100
+        foto_produk:
+          type: string
+          example: "https://images.unsplash.com/..."
         id_kategori:
           type: integer
+          example: 1
     
+    # Schema Request Order
     OrderRequest:
       type: object
+      required:
+        - nama_pelanggan
+        - items
       properties:
         nama_pelanggan:
           type: string
+          example: "Pak Dosen"
         items:
           type: array
           items:
@@ -226,5 +254,7 @@ components:
             properties:
               menu_id:
                 type: integer
+                example: 1
               qty:
                 type: integer
+                example: 2
