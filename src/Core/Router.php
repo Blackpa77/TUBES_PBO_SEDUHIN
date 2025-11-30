@@ -28,6 +28,13 @@ class Router
             $uri = substr($uri, 7);
         }
 
+        // --- FIX TAMBAHAN: PENYELAMAT ---
+        // Jika hasil potongannya kosong "", paksa jadi "/"
+        if ($uri === '' || $uri === false) {
+            $uri = '/';
+        }
+        // --------------------------------
+
         foreach ($this->routes as $r) {
             if ($r['method'] !== $method) continue;
             
@@ -35,15 +42,12 @@ class Router
             if (preg_match($pattern, $uri, $m)) {
                 array_shift($m);
                 
-                // --- FIX UTAMA: Jalankan Handler dengan Aman ---
                 $handler = $r['handler'];
                 $params = array_map(fn($v) => is_numeric($v) ? (int)$v : $v, $m);
 
-                // Jika handler adalah array [$objek, 'method'], langsung eksekusi
                 if (is_array($handler) && is_object($handler[0])) {
                     call_user_func_array($handler, $params);
                 } 
-                // Jika handler adalah function biasa
                 else if (is_callable($handler)) {
                     call_user_func_array($handler, $params);
                 }
