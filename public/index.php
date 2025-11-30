@@ -12,6 +12,7 @@ use App\Services\MenuService;
 use App\Services\OrderService;
 use App\Controllers\MenuController;
 use App\Controllers\OrderController;
+use App\Builders\ApiResponseBuilder;
 
 // Error Handling
 error_reporting(E_ALL);
@@ -30,24 +31,24 @@ header('Access-Control-Allow-Headers: Content-Type, Authorization');
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(200); exit; }
 
 // --- MANUAL DEPENDENCY INJECTION (WIRING) ---
-
-// 1. Siapkan Database Instance
 $database = Database::getInstance();
 
-// 2. Rakit Modul Menu (Clean Architecture)
 $menuRepo = new MenuRepository($database);
 $menuService = new MenuService($menuRepo);
 $menuController = new MenuController($menuService);
 
-// 3. Rakit Modul Order (Menggunakan MenuRepo juga untuk cek stok)
-// Note: OrderRepository belum kita ubah ke Interface, jadi pakai cara biasa dulu
 $orderRepo = new OrderRepository(); 
-$orderService = new OrderService($orderRepo, $menuRepo); // MenuRepo di-inject ke sini juga
+$orderService = new OrderService($orderRepo, $menuRepo);
 $orderController = new OrderController($orderService);
 
 // ---------------------------------------------
 
 $router = new Router();
+
+// --- RUTE BARU: HALAMAN UTAMA (ROOT) ---
+$router->get('/', function() {
+    ApiResponseBuilder::success(null, 'Welcome to Seduhin API! Server is Running.')->send();
+});
 
 // Routes Menu
 $router->get('/menus', [$menuController, 'index']);
