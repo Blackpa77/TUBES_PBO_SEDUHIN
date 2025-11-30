@@ -3,6 +3,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Order;
+use App\Factories\OrderFactory; // Wajib ada
 use PDO;
 use DateTime;
 
@@ -10,6 +11,7 @@ class OrderRepository
 {
     private PDO $db;
 
+    // Konstruktor tanpa parameter (sesuai manual wiring di index.php)
     public function __construct() 
     { 
         $this->db = Database::getInstance()->getConnection(); 
@@ -19,8 +21,9 @@ class OrderRepository
     {
         $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
         $results = [];
-        while ($r = $stmt->fetch()) {
-            $results[] = $this->hydrate($r);
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            // Gunakan Factory
+            $results[] = OrderFactory::fromDb($row);
         }
         return $results;
     }
@@ -29,16 +32,23 @@ class OrderRepository
     {
         $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
         $stmt->execute([$id]);
-        $r = $stmt->fetch();
-        return $r ? $this->hydrate($r) : null;
+        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if (!$row) return null;
+
+        // Gunakan Factory
+        return OrderFactory::fromDb($row);
     }
 
     public function save(Order $order): bool
     {
+        // Set waktu dibuat
         $order->setCreatedAt(new DateTime());
         
+        // 1. Simpan Header Order
         $sql = "INSERT INTO orders (nama_pelanggan, total_harga, status, created_at) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
+        
         $res = $stmt->execute([
             $order->namaPelanggan ?? 'Guest',
             $order->total, 
@@ -47,14 +57,16 @@ class OrderRepository
         ]);
 
         if ($res) {
+            // Ambil ID yang baru dibuat
             $orderId = $this->db->lastInsertId();
             $order->setId((int)$orderId);
+
+            // 2. Simpan Detail Item ke tabel order_items
             $this->saveItems($order);
         }
         return $res;
     }
 
-    // --- METHOD BARU: UPDATE ---
     public function update(Order $order): bool
     {
         $order->setUpdatedAt(new DateTime());
@@ -62,7 +74,6 @@ class OrderRepository
         $sql = "UPDATE orders SET nama_pelanggan = ?, status = ?, updated_at = ? WHERE id = ?";
         $stmt = $this->db->prepare($sql);
         
-        // Kita hanya update info header (Status & Nama)
         return $stmt->execute([
             $order->namaPelanggan,
             $order->status,
@@ -71,38 +82,35 @@ class OrderRepository
         ]);
     }
 
-    // --- METHOD BARU: DELETE ---
     public function delete(int $id): bool
     {
         $stmt = $this->db->prepare("DELETE FROM orders WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
-    // Helper untuk menyimpan item
+    // Helper untuk menyimpan item belanjaan
     private function saveItems(Order $order): void
     {
         if (!empty($order->items)) {
-            $stmt = $this->db->prepare("INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)");
+            $sqlItem = "INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)";
+            $stmt = $this->db->prepare($sqlItem);
+            
             foreach ($order->items as $itm) {
-                $subtotal = $itm->qty * $itm->price;
-                $stmt->execute([$order->getId(), $itm->menuId, $itm->qty, $itm->price, $subtotal]);
+                // Pastikan properti item tersedia
+                // Service mengirim object stdClass, jadi akses pake ->
+                $menuId = $itm->menuId ?? 0;
+                $qty    = $itm->qty ?? 0;
+                $price  = $itm->price ?? 0;
+                $subtotal = $qty * $price;
+
+                $stmt->execute([
+                    $order->getId(), 
+                    $menuId, 
+                    $qty, 
+                    $price, 
+                    $subtotal
+                ]);
             }
         }
-    }
-
-    // Helper untuk mapping DB ke Object
-    private function hydrate(array $row): Order
-    {
-        $order = new Order([
-            'customer_name' => $row['nama_pelanggan'],
-            'total' => $row['total_harga'],
-            'status' => $row['status']
-        ]);
-        $order->setId((int)$row['id']);
-        
-        if (!empty($row['created_at'])) $order->setCreatedAt(new DateTime($row['created_at']));
-        if (!empty($row['updated_at'])) $order->setUpdatedAt(new DateTime($row['updated_at']));
-        
-        return $order;
     }
 }

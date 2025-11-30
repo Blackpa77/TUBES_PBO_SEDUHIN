@@ -1,52 +1,36 @@
-openapi: 3.0.3
+openapi: 3.0.0
 info:
-  title: Seduhin REST API
-  version: "1.0.0"
+  title: Seduhin API
+  description: API Backend untuk Sistem Kasir Kafe Seduhin
+  version: 1.0.0
 servers:
-  - url: /api
+  - url: http://tubes_pbo_seduhin.test
 paths:
-  /menus:
+  /public/menus:
     get:
-      summary: List menus
+      summary: Ambil semua menu
       responses:
         '200':
-          description: OK
-          content:
-            application/json:
-              schema:
-                type: object
+          description: Sukses
+  /public/orders:
     post:
-      summary: Create menu
+      summary: Buat pesanan baru
       requestBody:
         required: true
         content:
           application/json:
             schema:
-              $ref: '#/components/schemas/Menu'
+              type: object
+              properties:
+                nama_pelanggan:
+                  type: string
+                items:
+                  type: array
       responses:
         '201':
           description: Created
-  /menus/{id}:
     get:
-      parameters:
-        - name: id
-          in: path
-          required: true
-          schema:
-            type: integer
+      summary: Lihat semua pesanan
       responses:
         '200':
-          description: OK
-components:
-  schemas:
-    Menu:
-      type: object
-      properties:
-        id:
-          type: integer
-        name:
-          type: string
-        price:
-          type: number
-        category:
-          type: string
+          description: Sukses

@@ -2,18 +2,27 @@
 namespace App\Factories;
 
 use App\Models\Order;
-use App\Enums\OrderStatus;
+use DateTime;
 
 class OrderFactory
 {
-    public static function create(array $data): Order
+    public static function fromDb(array $row): Order
     {
-        return new Order(
-            null,
-            $data['customer_id'],
-            0,
-            OrderStatus::Pending,
-            date('Y-m-d H:i:s')
-        );
+        $order = new Order([
+            'customer_name' => $row['nama_pelanggan'],
+            'total' => (float)$row['total_harga'],
+            'status' => $row['status']
+        ]);
+        
+        $order->setId((int)$row['id']);
+        
+        if (!empty($row['created_at'])) {
+            $order->setCreatedAt(new DateTime($row['created_at']));
+        }
+        if (!empty($row['updated_at'])) {
+            $order->setUpdatedAt(new DateTime($row['updated_at']));
+        }
+
+        return $order;
     }
 }

@@ -3,6 +3,7 @@ namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Menu;
+use App\Factories\MenuFactory; // Wajib ada
 use PDO;
 use DateTime;
 
@@ -10,12 +11,12 @@ class MenuRepository implements MenuRepositoryInterface
 {
     private PDO $db;
 
+    // Menerima Database dari luar (Sesuai settingan di index.php)
     public function __construct(Database $database)
     {
         $this->db = $database->getConnection();
     }
 
-    // --- UBAH NAMA METHOD INI JADI findById ---
     public function findById(int $id): ?Menu
     {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = ?");
@@ -24,9 +25,9 @@ class MenuRepository implements MenuRepositoryInterface
 
         if (!$row) return null;
 
-        return $this->hydrate($row);
+        // Pake Factory biar keren & rapi
+        return MenuFactory::fromDb($row);
     }
-    // -------------------------------------------
 
     public function findAll(array $filters = []): array
     {
@@ -44,7 +45,8 @@ class MenuRepository implements MenuRepositoryInterface
         
         $results = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
-            $results[] = $this->hydrate($row);
+            // Pake Factory di sini juga
+            $results[] = MenuFactory::fromDb($row);
         }
         return $results;
     }
@@ -61,15 +63,18 @@ class MenuRepository implements MenuRepositoryInterface
     private function insert(Menu $menu): bool
     {
         $menu->setCreatedAt(new DateTime());
-        // Default id_kategori 1 jika kosong
-        $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, 1, ?, ?, ?, ?, ?)";
+        
+        // Asumsi id_kategori default 1 jika tidak diset
+        $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
+        
         $res = $stmt->execute([
             $menu->getNamaProduk(),
+            $menu->getIdKategori() ?: 1, // Default kategori 1
             $menu->getHarga(),
-            'Deskripsi default', 
+            $menu->getDeskripsi(),
             $menu->getStok(),
-            null,
+            $menu->getFotoProduk(),
             $menu->getCreatedAt()
         ]);
 
@@ -82,12 +87,17 @@ class MenuRepository implements MenuRepositoryInterface
     private function update(Menu $menu): bool
     {
         $menu->setUpdatedAt(new DateTime());
-        $sql = "UPDATE produk SET nama_produk=?, harga=?, stok=?, updated_at=? WHERE id=?";
+        
+        $sql = "UPDATE produk SET nama_produk=?, id_kategori=?, harga=?, deskripsi=?, stok=?, foto_produk=?, updated_at=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
+        
         return $stmt->execute([
             $menu->getNamaProduk(),
+            $menu->getIdKategori() ?: 1,
             $menu->getHarga(),
+            $menu->getDeskripsi(),
             $menu->getStok(),
+            $menu->getFotoProduk(),
             $menu->getUpdatedAt(),
             $menu->getId()
         ]);
@@ -97,20 +107,5 @@ class MenuRepository implements MenuRepositoryInterface
     {
         $stmt = $this->db->prepare("DELETE FROM produk WHERE id = ?");
         return $stmt->execute([$id]);
-    }
-
-    private function hydrate(array $row): Menu
-    {
-        $menu = new Menu(
-            $row['nama_produk'],
-            (float)$row['harga'],
-            (int)$row['stok']
-        );
-        $menu->setId((int)$row['id']);
-        
-        if (!empty($row['created_at'])) $menu->setCreatedAt(new DateTime($row['created_at']));
-        if (!empty($row['updated_at'])) $menu->setUpdatedAt(new DateTime($row['updated_at']));
-        
-        return $menu;
     }
 }
