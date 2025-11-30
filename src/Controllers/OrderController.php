@@ -62,34 +62,76 @@ class OrderController extends Controller
         }
     }
 
-    // --- FITUR BARU: DOWNLOAD STRUK ---
+    // --- FITUR BARU: CETAK STRUK PDF (HTML View) ---
     public function download(int $id): void
     {
         try {
             $order = $this->service->getOrder($id);
             
-            // Format Struk Sederhana (Text)
-            $struk = "=== STRUK BELANJA SEDUHIN ===\n";
-            $struk .= "ID Order: #" . $order['id'] . "\n";
-            $struk .= "Tanggal : " . $order['created_at'] . "\n";
-            $struk .= "Pelanggan: " . $order['nama_pelanggan'] . "\n";
-            $struk .= "-----------------------------\n";
-            
+            // Tampilan HTML untuk Struk
+            $html = "
+            <html>
+            <head>
+                <title>Struk #{$order['id']}</title>
+                <style>
+                    body { font-family: monospace; max-width: 300px; margin: 20px auto; border: 1px solid #ddd; padding: 20px; }
+                    h2 { text-align: center; margin-bottom: 5px; }
+                    .meta { font-size: 12px; text-align: center; color: #666; margin-bottom: 20px; }
+                    .item { display: flex; justify-content: space-between; margin-bottom: 5px; font-size: 14px; }
+                    .line { border-top: 1px dashed #000; margin: 10px 0; }
+                    .total { font-weight: bold; font-size: 16px; display: flex; justify-content: space-between; }
+                    .footer { text-align: center; margin-top: 20px; font-size: 12px; }
+                    @media print {
+                        body { border: none; margin: 0; }
+                        button { display: none; }
+                    }
+                </style>
+            </head>
+            <body>
+                <h2>SEDUHIN COFFEE</h2>
+                <div class='meta'>
+                    Jl. Ahmad Yani No. 1<br>
+                    Order #{$order['id']} | " . date('d/m/Y H:i', strtotime($order['created_at'])) . "<br>
+                    Pelanggan: {$order['nama_pelanggan']}
+                </div>
+                
+                <div class='line'></div>
+            ";
+
             foreach ($order['items'] as $item) {
                 $subtotal = $item->qty * $item->price;
-                $struk .= "- ID Produk: " . $item->menuId . " x " . $item->qty . " = Rp " . number_format($subtotal) . "\n";
+                // Karena di order_items nama produk tidak tersimpan (hanya ID), kita tampilkan ID atau ambil ulang
+                // Untuk simplifikasi tugas, kita tampilkan format Qty x Harga
+                $html .= "
+                <div class='item'>
+                    <span>Menu #{$item->menuId} (x{$item->qty})</span>
+                    <span>Rp " . number_format($subtotal) . "</span>
+                </div>";
             }
-            
-            $struk .= "-----------------------------\n";
-            $struk .= "TOTAL   : Rp " . number_format($order['total']) . "\n";
-            $struk .= "STATUS  : " . strtoupper($order['status']) . "\n";
-            $struk .= "=============================\n";
-            $struk .= "Terima Kasih!";
 
-            // Kirim sebagai file download
-            header('Content-Type: text/plain');
-            header('Content-Disposition: attachment; filename="struk_order_'.$id.'.txt"');
-            echo $struk;
+            $html .= "
+                <div class='line'></div>
+                <div class='total'>
+                    <span>TOTAL</span>
+                    <span>Rp " . number_format($order['total']) . "</span>
+                </div>
+                <div class='item' style='margin-top:5px'>
+                    <span>Status</span>
+                    <span>" . strtoupper($order['status']) . "</span>
+                </div>
+
+                <div class='footer'>
+                    Terima Kasih!<br>
+                    <i>Simpan struk ini sebagai bukti pembayaran.</i>
+                </div>
+
+                <button onclick='window.print()' style='width:100%; padding:10px; margin-top:20px; cursor:pointer'>🖨️ CETAK / SIMPAN PDF</button>
+                
+                <script>window.print();</script>
+            </body>
+            </html>";
+
+            echo $html;
             exit;
 
         } catch (\Exception $e) {
