@@ -1,22 +1,22 @@
 <?php
-
 namespace App\Repositories;
 
 use App\Core\Database;
 use App\Models\Menu;
 use PDO;
+use DateTime;
 
 class MenuRepository implements MenuRepositoryInterface
 {
     private PDO $db;
 
-    // Dependency Injection: Database disuntikkan, bukan dipanggil statis
+    // Menerima Database dari luar (Dependency Injection)
     public function __construct(Database $database)
     {
         $this->db = $database->getConnection();
     }
 
-    public function find(int $id): ?Menu
+    public function findById(int $id): ?Menu
     {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = ?");
         $stmt->execute([$id]);
@@ -24,16 +24,32 @@ class MenuRepository implements MenuRepositoryInterface
 
         if (!$row) return null;
 
-        // Mapping Manual Row ke Object (Bisa juga pakai Factory)
-        $menu = new Menu($row['nama_produk'], $row['harga'], $row['stok']);
-        $menu->setId($row['id']);
+        return $this->hydrate($row);
+    }
+
+    public function findAll(array $filters = []): array
+    {
+        $sql = "SELECT * FROM produk WHERE 1=1";
+        $params = [];
         
-        return $menu;
+        if (!empty($filters['category'])) { 
+            $sql .= " AND id_kategori = ?"; 
+            $params[] = $filters['category']; 
+        }
+        $sql .= " ORDER BY created_at DESC";
+        
+        $stmt = $this->db->prepare($sql);
+        $stmt->execute($params);
+        
+        $results = [];
+        while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+            $results[] = $this->hydrate($row);
+        }
+        return $results;
     }
 
     public function save(Menu $menu): bool
     {
-        // Logika Pintar: Cek ID untuk tentukan Insert atau Update
         if ($menu->getId() === null) {
             return $this->insert($menu);
         } else {
@@ -43,32 +59,40 @@ class MenuRepository implements MenuRepositoryInterface
 
     private function insert(Menu $menu): bool
     {
-        $sql = "INSERT INTO produk (nama_produk, harga, stok) VALUES (?, ?, ?)";
-        $stmt = $this->db->prepare($sql);
+        $menu->setCreatedAt(new DateTime());
         
-        $result = $stmt->execute([
+        $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
+        $stmt = $this->db->prepare($sql);
+        $res = $stmt->execute([
             $menu->getNamaProduk(),
+            $menu->getIdKategori(),
             $menu->getHarga(),
-            $menu->getStok()
+            $menu->getDeskripsi(),
+            $menu->getStok(),
+            $menu->getFotoProduk(),
+            $menu->getCreatedAt()
         ]);
 
-        if ($result) {
-            // Set ID yang baru dibuat kembali ke objek
+        if ($res) {
             $menu->setId((int)$this->db->lastInsertId());
         }
-
-        return $result;
+        return $res;
     }
 
     private function update(Menu $menu): bool
     {
-        $sql = "UPDATE produk SET nama_produk = ?, harga = ?, stok = ? WHERE id = ?";
-        $stmt = $this->db->prepare($sql);
+        $menu->setUpdatedAt(new DateTime());
         
+        $sql = "UPDATE produk SET nama_produk=?, id_kategori=?, harga=?, deskripsi=?, stok=?, foto_produk=?, updated_at=? WHERE id=?";
+        $stmt = $this->db->prepare($sql);
         return $stmt->execute([
             $menu->getNamaProduk(),
+            $menu->getIdKategori(),
             $menu->getHarga(),
+            $menu->getDeskripsi(),
             $menu->getStok(),
+            $menu->getFotoProduk(),
+            $menu->getUpdatedAt(),
             $menu->getId()
         ]);
     }
@@ -77,5 +101,23 @@ class MenuRepository implements MenuRepositoryInterface
     {
         $stmt = $this->db->prepare("DELETE FROM produk WHERE id = ?");
         return $stmt->execute([$id]);
+    }
+
+    private function hydrate(array $row): Menu
+    {
+        $menu = new Menu(
+            $row['nama_produk'],
+            (float)$row['harga'],
+            (int)$row['stok'],
+            (int)$row['id_kategori'],
+            $row['deskripsi'] ?? '',
+            $row['foto_produk']
+        );
+        $menu->setId((int)$row['id']);
+        
+        if (!empty($row['created_at'])) $menu->setCreatedAt(new DateTime($row['created_at']));
+        if (!empty($row['updated_at'])) $menu->setUpdatedAt(new DateTime($row['updated_at']));
+        
+        return $menu;
     }
 }

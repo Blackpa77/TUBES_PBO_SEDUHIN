@@ -1,12 +1,12 @@
 <?php
-
 namespace App\Repositories;
 
 use App\Models\Menu;
 
 interface MenuRepositoryInterface
 {
-    public function find(int $id): ?Menu;
-    public function save(Menu $menu): bool; // Menangani Insert & Update
+    public function findById(int $id): ?Menu;
+    public function findAll(array $filters = []): array;
+    public function save(Menu $menu): bool;
     public function delete(int $id): bool;
 }

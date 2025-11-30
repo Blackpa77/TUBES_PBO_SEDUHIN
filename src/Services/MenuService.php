@@ -1,40 +1,74 @@
 <?php
-
 namespace App\Services;
 
 use App\Repositories\MenuRepositoryInterface;
 use App\Models\Menu;
-use Exception;
+use App\Exceptions\ValidationException;
+use App\Exceptions\NotFoundException;
 
 class MenuService
 {
-    private MenuRepositoryInterface $repository;
+    private MenuRepositoryInterface $repo;
 
-    // CONSTRUCTOR INJECTION: Kunci dari 'D' di SOLID
-    public function __construct(MenuRepositoryInterface $repository)
-    {
-        $this->repository = $repository;
+    // Dependency Injection: Minta Interface
+    public function __construct(MenuRepositoryInterface $repo) 
+    { 
+        $this->repo = $repo; 
     }
 
-    public function createMenu(array $data): Menu
-    {
-        // 1. Buat Objek
-        $menu = new Menu($data['nama_produk'], $data['harga'], $data['stok']);
+    public function list(array $filters = []): array {
+        $items = $this->repo->findAll($filters);
+        return array_map(fn($m)=>$m->toArray(), $items);
+    }
 
-        // 2. Validasi
+    public function get(int $id): array {
+        $m = $this->repo->findById($id);
+        if (!$m) throw new NotFoundException("Menu not found");
+        return $m->toArray();
+    }
+
+    public function create(array $data): array {
+        // Mapping input JSON ke Model Constructor
+        $menu = new Menu(
+            $data['nama_produk'] ?? $data['name'] ?? '',
+            (float)($data['harga'] ?? $data['price'] ?? 0),
+            (int)($data['stok'] ?? 0),
+            (int)($data['id_kategori'] ?? $data['category'] ?? 1),
+            $data['deskripsi'] ?? ''
+        );
+
         if (!$menu->validate()) {
-            // Lempar error agar Controller tahu validasi gagal
-            // (Asumsi Anda punya class ValidationException)
-            throw new \App\Exceptions\ValidationException($menu->getErrors());
+            throw new ValidationException("Validation failed", $menu->getErrors());
         }
-
-        // 3. Simpan via Repository
-        if (!$this->repository->save($menu)) {
-            throw new Exception("Gagal menyimpan menu ke database.");
-        }
-
-        return $menu;
+        
+        $this->repo->save($menu);
+        return $menu->toArray();
     }
 
-    // ... method lain
+    public function update(int $id, array $data): array {
+        $menu = $this->repo->findById($id);
+        if (!$menu) throw new NotFoundException("Menu not found");
+        
+        // Update Data: Buat objek baru dengan data gabungan
+        $updatedMenu = new Menu(
+            $data['nama_produk'] ?? $data['name'] ?? $menu->getNamaProduk(),
+            (float)($data['harga'] ?? $data['price'] ?? $menu->getHarga()),
+            (int)($data['stok'] ?? $menu->getStok()),
+            (int)($data['id_kategori'] ?? $data['category'] ?? $menu->getIdKategori()),
+            $data['deskripsi'] ?? $menu->getDeskripsi()
+        );
+        $updatedMenu->setId($id);
+        
+        if (!$updatedMenu->validate()) {
+            throw new ValidationException("Validation failed", $updatedMenu->getErrors());
+        }
+        
+        $this->repo->save($updatedMenu);
+        return $updatedMenu->toArray();
+    }
+
+    public function delete(int $id): void {
+        $deleted = $this->repo->delete($id);
+        if (!$deleted) throw new NotFoundException("Menu not found");
+    }
 }
