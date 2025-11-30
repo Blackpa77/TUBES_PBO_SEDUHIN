@@ -32,27 +32,31 @@ class OrderService
         return $order->toArray();
     }
 
-    public function createOrder(array $payload): array
+   public function createOrder(array $payload): array
     {
         $order = new Order($payload);
-        if (!$order->validate()) throw new ValidationException('Invalid order');
+        
+        // DEBUG: Kasih tau kenapa validasi gagal
+        if (!$order->validate()) {
+            // Ubah array items jadi string biar kebaca di pesan error
+            throw new ValidationException('Invalid order: Data items kosong atau salah format.');
+        }
 
         $total = 0;
         $itemsObjs = [];
 
         foreach ($payload['items'] as $it) {
             $menu = $this->menuRepo->findById((int)$it['menu_id']);
-            if (!$menu) throw new BusinessException("Menu id {$it['menu_id']} not found");
             
-            // Cek Stok
+            // DEBUG: Kasih tau menu mana yang ga ketemu
+            if (!$menu) throw new BusinessException("Menu dengan ID {$it['menu_id']} tidak ditemukan di database.");
+            
             if ($menu->getStock() < (int)$it['qty']) 
-                throw new BusinessException("Not enough stock for {$menu->toArray()['nama_produk']}");
+                throw new BusinessException("Stok tidak cukup untuk: " . $menu->getName());
 
-            // Kurangi Stok
             $menu->reduceStock((int)$it['qty']);
             $this->menuRepo->save($menu);
 
-            // Buat Objek Item
             $oItem = new \stdClass();
             $oItem->menuId = $menu->getId();
             $oItem->qty = (int)$it['qty'];
