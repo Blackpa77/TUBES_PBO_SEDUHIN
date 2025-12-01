@@ -1,10 +1,10 @@
 <?php
 // config/database.php
 return [
-    'host' => '127.0.0.1',
-    'database' => 'seduhin_db',
-    'username' => 'root',
-    'password' => '',
+    'host' => 'localhost', // Di hosting biasanya tetap localhost
+    'database' => 'id210000_seduhin_db', // Nanti kita ganti sesuai nama DB hosting
+    'username' => 'id210000_user',       // Nanti kita ganti sesuai user hosting
+    'password' => 'PasswordKamu123!',    // Nanti kita ganti
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
