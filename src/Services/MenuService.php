@@ -21,6 +21,7 @@ class MenuService
     }
 
     public function get(int $id): array {
+        // PERBAIKAN 1: Pakai findById
         $m = $this->repo->findById($id);
         if (!$m) throw new NotFoundException("Menu not found");
         return $m->toArray();
@@ -43,12 +44,13 @@ class MenuService
     }
 
     public function update(int $id, array $data): array {
+        // PERBAIKAN 2: Pakai findById
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
         
-        // Update data dengan mempertahankan data lama jika input kosong
-        $nama = $data['nama_produk'] ?? $data['name'] ?? $existing->getNamaProduk();
-        $harga = isset($data['harga']) ? (float)$data['harga'] : $existing->getHarga();
+        // Logic Update Data Lama dengan Baru
+        $nama = $data['nama_produk'] ?? $data['name'] ?? $existing->getName();
+        $harga = isset($data['harga']) ? (float)$data['harga'] : $existing->getPrice();
         $stok = isset($data['stok']) ? (int)$data['stok'] : $existing->getStock();
         $kategori = isset($data['id_kategori']) ? (int)$data['id_kategori'] : $existing->getIdKategori();
         $deskripsi = $data['deskripsi'] ?? $existing->getDeskripsi();
@@ -64,12 +66,13 @@ class MenuService
     }
 
     public function delete(int $id): void {
+        // PERBAIKAN 3: Cek dulu apakah ada
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
 
         $deleted = $this->repo->delete($id);
         if (!$deleted) {
-            throw new \Exception("Gagal menghapus. Menu ini sedang digunakan dalam transaksi.");
+            throw new \Exception("Gagal menghapus. Menu sedang digunakan di transaksi lain.");
         }
     }
 }
