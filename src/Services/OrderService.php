@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Repositories\OrderRepository;
 use App\Repositories\MenuRepositoryInterface;
-use App\Repositories\LogRepository; // Wajib
+use App\Repositories\LogRepository;
 use App\Models\Order;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ValidationException;
@@ -19,7 +19,7 @@ class OrderService
     {
         $this->orderRepo = $or;
         $this->menuRepo = $mr;
-        $this->logger = new LogRepository(); // Inisialisasi Logger
+        $this->logger = new LogRepository();
     }
 
     public function list(): array {
@@ -62,7 +62,6 @@ class OrderService
         return $order->toArray();
     }
 
-    // --- UPDATE STATUS ---
     public function updateOrder(int $id, array $payload): array {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
@@ -76,11 +75,9 @@ class OrderService
         return $order->toArray();
     }
 
-    // --- DELETE ORDER ---
     public function deleteOrder(int $id): void {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
-        
         $this->orderRepo->delete($id);
         $this->logger->log('Hapus Order', "Order #{$id} dihapus");
     }

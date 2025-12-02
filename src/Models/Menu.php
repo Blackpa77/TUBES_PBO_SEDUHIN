@@ -31,38 +31,33 @@ class Menu extends Model
         $this->fotoProduk = $fotoProduk;
     }
 
-    // --- GETTERS (VERSI INDONESIA & INGGRIS) ---
-    // Agar service yang minta bahasa manapun tetap jalan
+    // --- GETTERS (DUA BAHASA) ---
+    public function getId(): ?int { return $this->id; }
     
-    public function getStok(): int { return $this->stok; }   // Indo
-    public function getStock(): int { return $this->stok; }  // Inggris
-
-    public function getHarga(): float { return $this->harga; } // Indo
-    public function getPrice(): float { return $this->harga; } // Inggris
-
-    public function getNamaProduk(): string { return $this->namaProduk; } // Indo
-    public function getName(): string { return $this->namaProduk; }       // Inggris
-
+    // Versi Indo (Sesuai DB)
+    public function getNamaProduk(): string { return $this->namaProduk; }
+    public function getHarga(): float { return $this->harga; }
+    public function getStok(): int { return $this->stok; }
     public function getIdKategori(): int { return $this->idKategori; }
     public function getDeskripsi(): string { return $this->deskripsi; }
     public function getFotoProduk(): ?string { return $this->fotoProduk; }
 
-    // --- LOGIC BISNIS ---
+    // Versi Inggris (Agar Service tidak error)
+    public function getName(): string { return $this->namaProduk; }
+    public function getPrice(): float { return $this->harga; }
+    public function getStock(): int { return $this->stok; }
+
     public function reduceStock(int $qty = 1): void 
     { 
         $this->stok -= $qty;
         if($this->stok < 0) $this->stok = 0; 
     }
 
-    // --- VALIDASI ---
     public function validate(): bool
     {
         $this->clearErrors();
         $this->validateRequired('nama_produk', $this->namaProduk, 'Nama Produk');
-        
         if ($this->harga <= 0) $this->addError('harga', 'Harga harus > 0');
-        if ($this->stok < 0) $this->addError('stok', 'Stok tidak boleh minus');
-        
         return !$this->hasErrors();
     }
 

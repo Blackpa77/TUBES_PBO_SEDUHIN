@@ -1,27 +1,20 @@
 <?php
-// config/database.php
-
-// Deteksi otomatis: Apakah sedang di Laptop (Localhost) atau Hosting?
+// Deteksi otomatis: Apakah sedang di Laptop atau Hosting?
 $whitelist = ['127.0.0.1', '::1', 'localhost', 'tubes_pbo_seduhin.test'];
 
 if (in_array($_SERVER['SERVER_NAME'], $whitelist)) {
-    // =========================================
-    // 1. SETTINGAN LOKAL (LARAGON / XAMPP)
-    // =========================================
+    // === SETTINGAN LOKAL (LARAGON) ===
     $host = 'localhost';
-    $db   = 'seduhin_db';  // Nama database di HeidiSQL kamu
-    $user = 'root';        // Default Laragon
-    $pass = '';            // Default Laragon (Kosong)
-
+    $db   = 'seduhin_db';
+    $user = 'root';
+    $pass = ''; 
 } else {
-    // =========================================
-    // 2. SETTINGAN HOSTING (INFINITYFREE)
-    // =========================================
-    // Data ini diambil dari screenshot akunmu sebelumnya
+    // === SETTINGAN HOSTING (INFINITYFREE) ===
+    // Data diambil dari screenshot akunmu
     $host = 'sql300.infinityfree.com';
     $db   = 'if0_40563141_seduhin';
     $user = 'if0_40563141';
-    $pass = 'zP3VbW0qBchna'; // Password akun vPanel kamu
+    $pass = 'zP3VbW0qBchna';
 }
 
 return [
