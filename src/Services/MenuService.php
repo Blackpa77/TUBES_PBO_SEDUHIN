@@ -21,7 +21,8 @@ class MenuService
     }
 
     public function get(int $id): array {
-        $m = $this->repo->findById($id); // Pastikan pakai findById
+        // PERBAIKAN: Pakai findById
+        $m = $this->repo->findById($id);
         if (!$m) throw new NotFoundException("Menu not found");
         return $m->toArray();
     }
@@ -42,20 +43,21 @@ class MenuService
         return $menu->toArray();
     }
 
-    // --- PERBAIKAN BAGIAN INI ---
     public function update(int $id, array $data): array {
+        // PERBAIKAN: Pakai findById
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
         
-        // Kita gunakan Getter Bahasa Indonesia (getNamaProduk, getHarga) 
-        // karena ini yang PASTI ada di Model kamu (sesuai database)
-        
+        // Update data (Pake Getter Bahasa Indonesia yang pasti ada di Model)
         $nama = $data['nama_produk'] ?? $data['name'] ?? $existing->getNamaProduk();
         $harga = isset($data['harga']) ? (float)$data['harga'] : $existing->getHarga();
-        $stok = isset($data['stok']) ? (int)$data['stok'] : $existing->getStok(); // getStok (Indo)
+        $stok = isset($data['stok']) ? (int)$data['stok'] : $existing->getStok();
         
-        // Cek apakah getter id kategori ada, kalau tidak default ke 1
-        $kategori = method_exists($existing, 'getIdKategori') ? $existing->getIdKategori() : 1;
+        // Cek method getIdKategori (jaga-jaga kalau model belum update)
+        $kategori = 1;
+        if(method_exists($existing, 'getIdKategori')) {
+            $kategori = $existing->getIdKategori();
+        }
         $kategori = isset($data['id_kategori']) ? (int)$data['id_kategori'] : $kategori;
 
         $deskripsi = $data['deskripsi'] ?? $existing->getDeskripsi();
@@ -71,6 +73,7 @@ class MenuService
     }
 
     public function delete(int $id): void {
+        // PERBAIKAN: Cek exist dulu
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
 

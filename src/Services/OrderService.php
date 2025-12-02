@@ -19,6 +19,7 @@ class OrderService
     {
         $this->orderRepo = $or;
         $this->menuRepo = $mr;
+        // Inisialisasi Logger Manual
         $this->logger = new LogRepository();
     }
 
@@ -42,7 +43,7 @@ class OrderService
         foreach ($payload['items'] as $it) {
             $menu = $this->menuRepo->findById((int)$it['menu_id']);
             if (!$menu) throw new BusinessException("Menu not found");
-            if ($menu->getStock() < (int)$it['qty']) throw new BusinessException("Stok kurang: " . $menu->getName());
+            if ($menu->getStock() < (int)$it['qty']) throw new BusinessException("Stok kurang: " . $menu->getNamaProduk());
             
             $menu->reduceStock((int)$it['qty']);
             $this->menuRepo->save($menu);
@@ -50,7 +51,7 @@ class OrderService
             $oItem = new \stdClass();
             $oItem->menuId = $menu->getId();
             $oItem->qty = (int)$it['qty'];
-            $oItem->price = $menu->getPrice();
+            $oItem->price = $menu->getHarga();
             $itemsObjs[] = $oItem;
             $total += $oItem->qty * $oItem->price;
         }
@@ -62,6 +63,7 @@ class OrderService
         return $order->toArray();
     }
 
+    // --- FUNGSI UPDATE STATUS ---
     public function updateOrder(int $id, array $payload): array {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
@@ -75,9 +77,11 @@ class OrderService
         return $order->toArray();
     }
 
+    // --- FUNGSI DELETE ORDER ---
     public function deleteOrder(int $id): void {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
+        
         $this->orderRepo->delete($id);
         $this->logger->log('Hapus Order', "Order #{$id} dihapus");
     }
