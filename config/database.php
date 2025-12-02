@@ -1,20 +1,23 @@
 <?php
-// Deteksi otomatis: Apakah sedang di Laptop atau Hosting?
+// config/database.php
+
+// Deteksi: Jika servernya localhost/laragon, pakai settingan lokal.
+// Jika bukan (berarti di InfinityFree), pakai settingan hosting.
 $whitelist = ['127.0.0.1', '::1', 'localhost', 'tubes_pbo_seduhin.test'];
 
 if (in_array($_SERVER['SERVER_NAME'], $whitelist)) {
-    // === SETTINGAN LOKAL (LARAGON) ===
+    // === MODE LOKAL (LARAGON) ===
     $host = 'localhost';
     $db   = 'seduhin_db';
     $user = 'root';
-    $pass = ''; 
+    $pass = '';
 } else {
-    // === SETTINGAN HOSTING (INFINITYFREE) ===
-    // Data diambil dari screenshot akunmu
-    $host = 'sql300.infinityfree.com';
-    $db   = 'if0_40563141_seduhin';
-    $user = 'if0_40563141';
-    $pass = 'zP3VbW0qBchna';
+    // === MODE HOSTING (INFINITYFREE) ===
+    // Masukkan data dari CPanel InfinityFree kamu
+    $host = 'sql300.infinityfree.com'; // Cek Hostname di akunmu
+    $db   = 'if0_40563141_seduhin';    // DB Name
+    $user = 'if0_40563141';            // DB User
+    $pass = 'zP3VbW0qBchna';           // Password VPanel (yang tadi)
 }
 
 return [
