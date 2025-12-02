@@ -16,18 +16,24 @@ class MenuRepository implements MenuRepositoryInterface
         $this->db = $database->getConnection();
     }
 
+    // PERBAIKAN: Ubah nama jadi findById (agar cocok dengan Service)
     public function findById(int $id): ?Menu
     {
         $stmt = $this->db->prepare("SELECT * FROM produk WHERE id = ?");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
-        return $row ? MenuFactory::fromDb($row) : null;
+
+        if (!$row) return null;
+
+        // Gunakan Factory
+        return MenuFactory::fromDb($row);
     }
 
     public function findAll(array $filters = []): array
     {
         $sql = "SELECT * FROM produk WHERE 1=1";
         $params = [];
+        
         if (!empty($filters['category'])) { 
             $sql .= " AND id_kategori = ?"; 
             $params[] = $filters['category']; 
@@ -58,6 +64,7 @@ class MenuRepository implements MenuRepositoryInterface
         $menu->setCreatedAt(new DateTime());
         $sql = "INSERT INTO produk (nama_produk, id_kategori, harga, deskripsi, stok, foto_produk, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
+        
         $res = $stmt->execute([
             $menu->getNamaProduk(),
             $menu->getIdKategori() ?: 1,
@@ -67,18 +74,16 @@ class MenuRepository implements MenuRepositoryInterface
             $menu->getFotoProduk(),
             $menu->getCreatedAt()
         ]);
-        if ($res) $menu->setId((int)$this->db->lastInsertId());
+
+        if ($res) {
+            $menu->setId((int)$this->db->lastInsertId());
+        }
         return $res;
     }
 
-    // --- PERBAIKAN LOGIC UPDATE ---
     private function update(Menu $menu): bool
     {
         $menu->setUpdatedAt(new DateTime());
-        
-        // Pastikan ID ada
-        if (!$menu->getId()) return false;
-
         $sql = "UPDATE produk SET nama_produk=?, id_kategori=?, harga=?, deskripsi=?, stok=?, foto_produk=?, updated_at=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
         
@@ -94,18 +99,9 @@ class MenuRepository implements MenuRepositoryInterface
         ]);
     }
 
-    // --- PERBAIKAN LOGIC DELETE ---
     public function delete(int $id): bool
     {
-        // Cek dulu apakah menu ini dipake di order_items
-        // Kalau dipake, biasanya database menolak (Foreign Key Error)
-        // Kita coba delete, kalau gagal berarti masih dipake.
-        try {
-            $stmt = $this->db->prepare("DELETE FROM produk WHERE id = ?");
-            return $stmt->execute([$id]);
-        } catch (\PDOException $e) {
-            // Kemungkinan error constraint violation (Menu sedang dipakai di order)
-            return false;
-        }
+        $stmt = $this->db->prepare("DELETE FROM produk WHERE id = ?");
+        return $stmt->execute([$id]);
     }
 }
