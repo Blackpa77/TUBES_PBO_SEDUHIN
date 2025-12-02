@@ -20,8 +20,8 @@ class Database
         $config = require __DIR__ . '/../../config/database.php';
 
         // UPDATE PENTING: Tambahkan 'port' ke dalam DSN
-        // Railway (dan cloud provider lain) seringkali butuh port spesifik
-        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}";
+       // Di dalam __construct()
+$dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}";
 
         try {
             $this->connection = new PDO($dsn, $config['username'], $config['password'], $config['options']);

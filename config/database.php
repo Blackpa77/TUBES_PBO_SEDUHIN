@@ -8,7 +8,7 @@ $user = 'root';
 $pass = '';
 $port = 3306;
 
-// Cek apakah berjalan di Railway (Variabel ini otomatis ada di Railway)
+// Cek apakah ada Environment Variable (Dari Railway/Render)
 if (getenv('MYSQLHOST')) {
     $host = getenv('MYSQLHOST');
     $db   = getenv('MYSQLDATABASE');
@@ -22,7 +22,7 @@ return [
     'database' => $db,
     'username' => $user,
     'password' => $pass,
-    'port' => $port, // Kita kirim port juga biar aman
+    'port' => $port,
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
