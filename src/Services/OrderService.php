@@ -3,7 +3,7 @@ namespace App\Services;
 
 use App\Repositories\OrderRepository;
 use App\Repositories\MenuRepositoryInterface;
-use App\Repositories\LogRepository;
+use App\Repositories\LogRepository; // Pastikan ini ada
 use App\Models\Order;
 use App\Exceptions\BusinessException;
 use App\Exceptions\ValidationException;
@@ -19,7 +19,8 @@ class OrderService
     {
         $this->orderRepo = $or;
         $this->menuRepo = $mr;
-        $this->logger = new \App\Repositories\LogRepository();
+        // Inisialisasi Logger Manual (Pengganti Trigger)
+        $this->logger = new LogRepository();
     }
 
     public function list(): array
@@ -38,7 +39,7 @@ class OrderService
     public function createOrder(array $payload): array
     {
         $order = new Order($payload);
-        if (!$order->validate()) throw new ValidationException('Invalid order payload');
+        if (!$order->validate()) throw new ValidationException('Invalid order');
 
         $total = 0;
         $itemsObjs = [];
@@ -48,7 +49,7 @@ class OrderService
             if (!$menu) throw new BusinessException("Menu id {$it['menu_id']} not found");
             
             if ($menu->getStock() < (int)$it['qty']) 
-                throw new BusinessException("Stok tidak cukup untuk: " . $menu->getName());
+                throw new BusinessException("Not enough stock for {$menu->getName()}");
 
             $menu->reduceStock((int)$it['qty']);
             $this->menuRepo->save($menu);
@@ -67,23 +68,24 @@ class OrderService
 
         $this->orderRepo->save($order);
         
-        // Log Manual
-        $this->logger->log('Transaksi Baru', "Pelanggan: {$order->namaPelanggan}, Total: {$order->total}");
+        // LOG MANUAL: Transaksi Baru
+        $this->logger->log('Transaksi Baru', "Pelanggan: {$order->namaPelanggan}, Total: Rp " . number_format($order->total));
 
         return $order->toArray();
     }
 
-    // --- PERBAIKAN UPDATE ORDER ---
     public function updateOrder(int $id, array $payload): array
     {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
 
-        // Update Status
+        // Update data
         if (isset($payload['status'])) {
+            $oldStatus = $order->status;
             $order->status = $payload['status'];
-            // Log perubahan status
-            $this->logger->log('Update Status', "Order #{$id} status changed to {$payload['status']}");
+            
+            // LOG MANUAL: Update Status
+            $this->logger->log('Update Status', "Order #{$id}: {$oldStatus} -> {$order->status}");
         }
         
         if (isset($payload['nama_pelanggan'])) {
@@ -94,13 +96,14 @@ class OrderService
         return $order->toArray();
     }
 
-    // --- PERBAIKAN DELETE ORDER ---
     public function deleteOrder(int $id): void
     {
         $order = $this->orderRepo->findById($id);
         if (!$order) throw new NotFoundException("Order not found");
         
         $this->orderRepo->delete($id);
-        $this->logger->log('Hapus Order', "Order #{$id} deleted");
+
+        // LOG MANUAL: Hapus Order
+        $this->logger->log('Hapus Order', "Order #{$id} dihapus dari sistem");
     }
 }
