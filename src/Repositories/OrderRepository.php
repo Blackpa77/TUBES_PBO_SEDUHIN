@@ -11,13 +11,11 @@ class OrderRepository
 {
     private PDO $db;
 
-    public function __construct() 
-    { 
+    public function __construct() { 
         $this->db = Database::getInstance()->getConnection(); 
     }
 
-    public function findAll(): array
-    {
+    public function findAll(): array {
         $stmt = $this->db->query("SELECT * FROM orders ORDER BY created_at DESC");
         $results = [];
         while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
@@ -26,16 +24,14 @@ class OrderRepository
         return $results;
     }
 
-    public function findById(int $id): ?Order
-    {
+    public function findById(int $id): ?Order {
         $stmt = $this->db->prepare("SELECT * FROM orders WHERE id = ?");
         $stmt->execute([$id]);
         $row = $stmt->fetch(PDO::FETCH_ASSOC);
         return $row ? OrderFactory::fromDb($row) : null;
     }
 
-    public function save(Order $order): bool
-    {
+    public function save(Order $order): bool {
         $order->setCreatedAt(new DateTime());
         $sql = "INSERT INTO orders (nama_pelanggan, total_harga, status, created_at) VALUES (?, ?, ?, ?)";
         $stmt = $this->db->prepare($sql);
@@ -45,7 +41,6 @@ class OrderRepository
             $order->status, 
             $order->getCreatedAt()
         ]);
-
         if ($res) {
             $orderId = $this->db->lastInsertId();
             $order->setId((int)$orderId);
@@ -54,43 +49,29 @@ class OrderRepository
         return $res;
     }
 
-    // --- PERBAIKAN UPDATE STATUS ---
-    public function update(Order $order): bool
-    {
+    // --- UPDATE ---
+    public function update(Order $order): bool {
         $order->setUpdatedAt(new DateTime());
-        
-        // Kita hanya update status dan nama pelanggan (total & item biasanya tidak diubah setelah checkout)
-        $sql = "UPDATE orders SET nama_pelanggan=?, status=?, updated_at=? WHERE id=?";
+        $sql = "UPDATE orders SET status=?, updated_at=? WHERE id=?";
         $stmt = $this->db->prepare($sql);
-        
         return $stmt->execute([
-            $order->namaPelanggan,
             $order->status,
             $order->getUpdatedAt(),
             $order->getId()
         ]);
     }
 
-    // --- PERBAIKAN DELETE ---
-    public function delete(int $id): bool
-    {
-        // Karena kita pakai ON DELETE CASCADE di database (seharusnya), 
-        // menghapus order otomatis menghapus order_items.
+    // --- DELETE ---
+    public function delete(int $id): bool {
         $stmt = $this->db->prepare("DELETE FROM orders WHERE id = ?");
         return $stmt->execute([$id]);
     }
 
-    private function saveItems(Order $order): void
-    {
+    private function saveItems(Order $order): void {
         if (!empty($order->items)) {
-            $sqlItem = "INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)";
-            $stmt = $this->db->prepare($sqlItem);
+            $stmt = $this->db->prepare("INSERT INTO order_items (order_id, produk_id, qty, harga_saat_ini, subtotal) VALUES (?, ?, ?, ?, ?)");
             foreach ($order->items as $itm) {
-                $menuId = $itm->menuId ?? 0;
-                $qty    = $itm->qty ?? 0;
-                $price  = $itm->price ?? 0;
-                $subtotal = $qty * $price;
-                $stmt->execute([$order->getId(), $menuId, $qty, $price, $subtotal]);
+                $stmt->execute([$order->getId(), $itm->menuId, $itm->qty, $itm->price, $itm->qty*$itm->price]);
             }
         }
     }

@@ -15,7 +15,7 @@ trait Timestampable
         $this->updatedAt = $now;
     }
 
-    // --- PERBAIKAN: Tambahkan Setter ini ---
+    // --- INI YANG KURANG TADI ---
     public function setCreatedAt(DateTime $date): void 
     { 
         $this->createdAt = $date; 
@@ -25,9 +25,8 @@ trait Timestampable
     { 
         $this->updatedAt = $date; 
     }
-    // ----------------------------------------
+    // ----------------------------
 
-    // Getter tetap sama, tapi pastikan return type aman
     public function getCreatedAt(): ?string 
     { 
         return $this->createdAt?->format('Y-m-d H:i:s'); 

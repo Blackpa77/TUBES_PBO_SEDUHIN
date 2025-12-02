@@ -21,8 +21,7 @@ class MenuService
     }
 
     public function get(int $id): array {
-        // PERBAIKAN 1: Pakai findById
-        $m = $this->repo->findById($id);
+        $m = $this->repo->findById($id); // Pastikan pakai findById
         if (!$m) throw new NotFoundException("Menu not found");
         return $m->toArray();
     }
@@ -43,16 +42,22 @@ class MenuService
         return $menu->toArray();
     }
 
+    // --- PERBAIKAN BAGIAN INI ---
     public function update(int $id, array $data): array {
-        // PERBAIKAN 2: Pakai findById
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
         
-        // Logic Update Data Lama dengan Baru
-        $nama = $data['nama_produk'] ?? $data['name'] ?? $existing->getName();
-        $harga = isset($data['harga']) ? (float)$data['harga'] : $existing->getPrice();
-        $stok = isset($data['stok']) ? (int)$data['stok'] : $existing->getStock();
-        $kategori = isset($data['id_kategori']) ? (int)$data['id_kategori'] : $existing->getIdKategori();
+        // Kita gunakan Getter Bahasa Indonesia (getNamaProduk, getHarga) 
+        // karena ini yang PASTI ada di Model kamu (sesuai database)
+        
+        $nama = $data['nama_produk'] ?? $data['name'] ?? $existing->getNamaProduk();
+        $harga = isset($data['harga']) ? (float)$data['harga'] : $existing->getHarga();
+        $stok = isset($data['stok']) ? (int)$data['stok'] : $existing->getStok(); // getStok (Indo)
+        
+        // Cek apakah getter id kategori ada, kalau tidak default ke 1
+        $kategori = method_exists($existing, 'getIdKategori') ? $existing->getIdKategori() : 1;
+        $kategori = isset($data['id_kategori']) ? (int)$data['id_kategori'] : $kategori;
+
         $deskripsi = $data['deskripsi'] ?? $existing->getDeskripsi();
         $foto = $data['foto_produk'] ?? $existing->getFotoProduk();
 
@@ -66,7 +71,6 @@ class MenuService
     }
 
     public function delete(int $id): void {
-        // PERBAIKAN 3: Cek dulu apakah ada
         $existing = $this->repo->findById($id);
         if (!$existing) throw new NotFoundException("Menu not found");
 
