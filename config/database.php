@@ -1,23 +1,20 @@
 <?php
 // config/database.php
 
-// Deteksi: Jika servernya localhost/laragon, pakai settingan lokal.
-// Jika bukan (berarti di InfinityFree), pakai settingan hosting.
-$whitelist = ['127.0.0.1', '::1', 'localhost', 'tubes_pbo_seduhin.test'];
+// Default: Localhost (Laragon/XAMPP)
+$host = 'localhost';
+$db   = 'seduhin_db';
+$user = 'root';
+$pass = '';
+$port = 3306;
 
-if (in_array($_SERVER['SERVER_NAME'], $whitelist)) {
-    // === MODE LOKAL (LARAGON) ===
-    $host = 'localhost';
-    $db   = 'seduhin_db';
-    $user = 'root';
-    $pass = '';
-} else {
-    // === MODE HOSTING (INFINITYFREE) ===
-    // Masukkan data dari CPanel InfinityFree kamu
-    $host = 'sql300.infinityfree.com'; // Cek Hostname di akunmu
-    $db   = 'if0_40563141_seduhin';    // DB Name
-    $user = 'if0_40563141';            // DB User
-    $pass = 'zP3VbW0qBchna';           // Password VPanel (yang tadi)
+// Cek apakah berjalan di Railway (Variabel ini otomatis ada di Railway)
+if (getenv('MYSQLHOST')) {
+    $host = getenv('MYSQLHOST');
+    $db   = getenv('MYSQLDATABASE');
+    $user = getenv('MYSQLUSER');
+    $pass = getenv('MYSQLPASSWORD');
+    $port = getenv('MYSQLPORT');
 }
 
 return [
@@ -25,6 +22,7 @@ return [
     'database' => $db,
     'username' => $user,
     'password' => $pass,
+    'port' => $port, // Kita kirim port juga biar aman
     'charset' => 'utf8mb4',
     'options' => [
         PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,

@@ -8,20 +8,25 @@ use PDOException;
  * Database Connection - Singleton Pattern
  * Memastikan hanya ada satu koneksi database
  */
-
 class Database
 {
     private static ?Database $instance = null;
     private PDO $connection;
 
-     // Enkapsulasi: Constructor private
+    // Enkapsulasi: Constructor private
     private function __construct()
     {
+        // Muat konfigurasi dari config/database.php
         $config = require __DIR__ . '/../../config/database.php';
-        $dsn = "mysql:host={$config['host']};dbname={$config['database']};charset={$config['charset']}";
+
+        // UPDATE PENTING: Tambahkan 'port' ke dalam DSN
+        // Railway (dan cloud provider lain) seringkali butuh port spesifik
+        $dsn = "mysql:host={$config['host']};port={$config['port']};dbname={$config['database']};charset={$config['charset']}";
+
         try {
             $this->connection = new PDO($dsn, $config['username'], $config['password'], $config['options']);
         } catch (PDOException $e) {
+            // Error handling yang lebih bersih
             throw new \RuntimeException("DB connection failed: " . $e->getMessage());
         }
     }
@@ -37,6 +42,7 @@ class Database
         return $this->connection;
     }
 
+    // Mencegah cloning dan unserialize (Pattern Singleton)
     private function __clone() {}
     public function __wakeup() { throw new \Exception("Cannot unserialize"); }
 }
